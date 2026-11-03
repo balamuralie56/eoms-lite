@@ -7,7 +7,10 @@
   "scripts": {
     "db:up": "docker compose up -d db",
     "db:down": "docker compose down",
-    "test": "node --test --test-concurrency=1 \"tests/db/*.test.js\""
+    "test": "node --test --test-concurrency=1 \"tests/db/*.test.js\"",
+    "stack:up": "docker compose up -d db && node tools/local-stack/setup-db.mjs && docker compose --profile e2e up -d --force-recreate postgrest",
+    "stack:server": "node tools/local-stack/server.mjs --local-test-stack",
+    "test:api": "node --test --test-concurrency=1 \"tests/api/*.test.js\""
   },
   "devDependencies": {
     "pg": "^8.13.0"
