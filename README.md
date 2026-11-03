@@ -2,7 +2,8 @@
 
 Lightweight, QR-based invigilator room allocation. Independent of the production EOMS.
 
-**Status: Phase 1 (database + allocation engine).** No frontend yet.
+**Status: Phase 2A done (database-side administration: sessions, rooms, capacity, schedule import).**
+Phase 1 (allocation engine) is unchanged. No frontend yet. Not yet run on a real Supabase project.
 
 * One permanent QR -> static HTTPS page -> employee enters Employee ID -> server picks the session from its own clock,
   validates the schedule, allocates a room in PostgreSQL, returns the allocation.
@@ -22,6 +23,7 @@ npm test
 
 * [Architecture](docs/ARCHITECTURE.md), [Decisions](docs/ARCHITECTURE_DECISIONS.md)
 * [Database schema](docs/DATABASE_SCHEMA.md), [Allocation algorithm and locking](docs/ALLOCATION_ALGORITHM.md)
+* [Admin configuration](docs/ADMIN_CONFIGURATION.md), [Schedule import](docs/SCHEDULE_IMPORT.md)
 * [Security model](docs/SECURITY_MODEL.md)
 * [Supabase setup and migration deployment](docs/SETUP_SUPABASE.md)
 * [Load-test plan and results](docs/LOAD_TEST_PLAN.md)

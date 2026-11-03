@@ -36,11 +36,26 @@ never used client-side.
 Schema, constraints, integrity triggers, RLS/grants, `get_checkin_status`, `checkin`, admin late/re-entry
 authorization, correction/release, flag workflow, audit, and 47 database tests on real PostgreSQL.
 
-## Not in Phase 1
+## Phase 2A scope delivered (database-side administration)
 
-Frontend, PNG slip, schedule import RPC and parser, admin UI, audited RPCs for editing sessions/rooms/capacities,
-CSV/XLSX exports, monitoring views, abuse-table cleanup job, any measurement on real Supabase.
-In Phase 1, sessions/rooms/schedule are created by SQL as the project owner (tests do exactly this).
+Audited admin RPCs for sessions, rooms, per-session room eligibility and invigilator capacity
+(`ADMIN_CONFIGURATION.md`), and a two-stage staged schedule import with a dry run, in-database revalidation,
+transactional commit and an explicit, separately confirmed replace action (`SCHEDULE_IMPORT.md`).
+Guard triggers make the invariants hold even for direct SQL. 96 database tests (Phase 1 + 2A) on real PostgreSQL.
+
+```
+Admin browser (Phase 2B)                          Supabase (PostgreSQL)
+  parse CSV/XLSX ──chunks of <=500 rows──►  admin_import_begin / add_rows ─► import_rows (staging)
+  preview  ◄────── rows, statuses, msgs ───  admin_import_validate / preview   (schedule untouched)
+  confirm  ───────────────────────────────►  admin_import_commit ─► [lock] revalidate ─► schedule (atomic)
+  configure sessions/rooms/capacity ──────►  admin_* RPCs ─► [session lock] ─► audit_log
+```
+
+## Not yet built
+
+Frontend (public page, PNG slip, admin UI), CSV/XLSX exports, monitoring views, removal/undo of imported schedule rows,
+abuse-table cleanup job, any measurement or smoke test on real Supabase.
+Sessions/rooms/schedule can now be managed through RPCs; direct SQL by the project owner remains possible but is not audited.
 
 ## Time
 

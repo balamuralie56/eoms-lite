@@ -150,6 +150,37 @@ class World {
     return ids;
   }
 
+  // ---- Phase 2A helpers --------------------------------------------------
+
+  /** Admin-role connection for a newly created active admin. */
+  async adminClient(email) {
+    const id = await this.admin(email);
+    const c = await this.as('authenticated', { sub: id });
+    c.adminId = id;
+    return c;
+  }
+
+  /** Calls public.<name>(args...) and returns the single jsonb result. */
+  async rpc(client, name, ...args) {
+    const ph = args.map((_, i) => `$${i + 1}`).join(',');
+    const r = await client.query(`select public.${name}(${ph}) as r`, args);
+    return r.rows[0].r;
+  }
+
+  /** 'YYYY-MM-DD HH24:MI' in Asia/Kolkata for now() + mins (the format the admin RPCs take). */
+  async ist(mins) {
+    return (await this.one(
+      `select to_char((now() + make_interval(mins => $1)) at time zone 'Asia/Kolkata', 'YYYY-MM-DD HH24:MI') s`, [mins])).s;
+  }
+
+  async istToday() {
+    return this.istDate(0);
+  }
+
+  async istDate(offsetDays) {
+    return (await this.one(`select ((now() at time zone 'Asia/Kolkata')::date + $1::int)::text d`, [offsetDays])).d;
+  }
+
   // ---- calls -------------------------------------------------------------
 
   async checkin(client, id) {

@@ -14,10 +14,12 @@ not assumed here.
 
 ## 2. Deploy the migrations
 
-Apply in order. Do **not** apply `tests/db/00_supabase_shim.sql` (test-only).
+Apply all seven in order. Do **not** apply `tests/db/00_supabase_shim.sql` (test-only).
+A project that already has 0001-0003 only needs 0004-0007.
 
-**Option A: SQL editor (simplest).** Paste and run, in order:
-`supabase/migrations/0001_schema.sql`, then `0002_functions.sql`, then `0003_security.sql`.
+**Option A: SQL editor (simplest).** Paste and run, in order: `0001_schema.sql`, `0002_functions.sql`,
+`0003_security.sql`, `0004_admin_schema.sql`, `0005_admin_config_functions.sql`, `0006_import_functions.sql`,
+`0007_admin_security.sql` (all under `supabase/migrations/`). Run each as one script and stop at the first error.
 
 **Option B: Supabase CLI** (not installed here; install per Supabase docs):
 
@@ -62,10 +64,24 @@ curl -s -X POST "<url>/rest/v1/rpc/admin_release" -H "apikey: <anon>" -H "Author
 Also confirm: a signed-in non-admin can call nothing privileged; an admin JWT can call `is_admin`; and check what
 `current_setting('request.headers')` contains for the client-IP throttle.
 
-## 5. Seed data (Phase 1, by SQL as project owner)
+Phase 2A additions to the smoke test (all still **not performed** on a real project):
 
-Insert `exam_sessions`, `rooms`, `session_rooms`, `schedule` rows with the SQL editor (see `tests/db/harness.js`
-for a worked example of each insert). Phase 2 replaces this with audited admin RPCs and the import UI.
+* An anonymous call to any `admin_*` function (for example `admin_create_room`) must be denied; the same call with a
+  signed-in **non-admin** token must return `not authorized`; with an **admin** token it must succeed and write an audit row.
+* Confirm the Data API accepts the RPC parameter shapes used by the tests (named parameters over JSON, `jsonb` rows,
+  `null` for defaults) and that a 500-row `admin_import_add_rows` body is accepted by the platform.
+* Check that `audit_log` cannot be modified from the dashboard's API roles.
+
+## 5. Configure and load data (Phase 2A: through audited RPCs)
+
+With an admin JWT, in this order: `admin_create_session` (IST local times), `admin_create_room`,
+`admin_assign_room_to_session` (invigilator capacity), then the schedule through
+`admin_import_begin` -> `admin_import_add_rows` -> `admin_import_validate` -> `admin_import_commit`.
+See `ADMIN_CONFIGURATION.md` and `SCHEDULE_IMPORT.md`. Until the Phase 2B UI exists these can be called from the
+SQL editor with `set local role authenticated` and a `request.jwt.claims` setting, or from any client holding an admin JWT.
+Direct inserts as project owner still work but are not audited.
+
+New import limits live in `app_settings` (`import_max_rows`, `import_chunk_max_rows`, `import_max_file_bytes`).
 
 ## 6. Local test database
 

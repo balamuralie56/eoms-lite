@@ -52,3 +52,40 @@ A smoke test on a real project is required (see `SETUP_SUPABASE.md`).
 ## ADR-12 Audit every allocation
 One extra INSERT per successful check-in (about 500 per session) is cheap and gives a full trail.
 Failed lookups are *not* audited (only throttle-counted) to avoid write amplification under abuse.
+
+## ADR-13 Phase 2A is additive: new migrations 0004-0007, Phase 1 migrations untouched
+Phase 1 files are byte-identical to the Phase 1 commit. New behaviour (guard triggers, admin RPCs, import tables) arrives
+as new versioned migrations, so a project that already applied 0001-0003 only needs 0004-0007.
+
+## ADR-14 Configuration shares the allocation lock
+Every admin RPC that can change what the engine sees (session window/active, room active, session-room capacity/active,
+room details) takes `eoms_private.lock_session` (rooms: every session they are in, in id order, so admins cannot deadlock).
+Deterministic tests hold the lock in another transaction and prove each RPC waits.
+*Trade-off:* an admin edit waits behind in-flight check-ins (milliseconds) and vice versa.
+
+## ADR-15 Guard triggers as a second line of defence
+`session_rooms` (capacity cannot drop below active allocations; link immutable) and `exam_sessions` (date/label frozen
+after allocations) have triggers, so the rules hold even if someone edits tables directly or a future RPC forgets them.
+
+## ADR-16 Times in, as local IST text; offsets rejected
+`2026-11-03 08:30`, converted with `AT TIME ZONE 'Asia/Kolkata'`. A UTC offset in the text is refused because a
+`timestamp` cast would silently drop it, shifting an exam window by hours.
+
+## ADR-17 Import is staged in tables, not one big RPC
+Bounded chunks (500 rows) into `import_rows`; validation and commit run in SQL over the staged rows. Avoids oversized
+request bodies and long transactions; staging is retryable and previewable. The file-size limit is advisory (the file
+never reaches the database); row, chunk and field-length limits are the enforced bounds.
+
+## ADR-18 Non-destructive import; replacement is a separate action
+Default commit only inserts. Exact duplicates are skipped; conflicts require an explicit `skip`/`abort` decision; any
+invalid row blocks the commit. Overwriting is a distinct, confirmed RPC with per-row before/after audit.
+
+## ADR-19 Commit revalidates and is serialised
+`admin_import_commit` takes a global import advisory lock and revalidates inside the transaction; if counts changed since
+the preview it refuses (`CHANGED_SINCE_PREVIEW`). The insert is in a sub-transaction so a failure leaves no partial rows
+yet still records the failure. Business rejections are JSON results (so state and audit persist), misuse raises.
+
+## ADR-20 Set-based SQL, no self-join on function-calling subqueries
+A first version of validation took ~32 s for 5000 rows because an UPDATE joined to an aggregate over the same table was
+re-evaluated per row. Rewritten as row-wise updates plus a materialised window-function pass joined back by primary key
+(~0.3 s). Measured locally; to be re-measured on Supabase.

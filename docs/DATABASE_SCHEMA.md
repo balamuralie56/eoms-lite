@@ -45,7 +45,34 @@ A release requires a reason (CHECK). Rows are never deleted or un-released.
 * `admin_authorize_reentry` is the equivalent for an employee whose allocation was released.
 * Permits can be revoked (`admin_revoke_authorization`) and may carry an admin-set expiry. No automatic grace periods.
 
+## Phase 2A additions (migrations 0004-0007)
+
+* `import_batches` gained: `declared_rows`, `declared_file_bytes`, `valid_count`, `invalid_count`,
+  `duplicate_in_batch_count`, `exact_duplicate_count`, `conflict_count`, `inserted_count`, `replaced_count`,
+  `validated_at`, `committed_at`, `committed_by`, `error`. Status is now
+  `staging | validated | committed | cancelled` (`failed`, `pending`, `rejected` remain allowed but are unused). Default `staging`.
+* New table **`import_rows`** (staging): `(batch_id, row_number)` PK; raw values as received, normalised
+  `employee_id/employee_name/department/exam_date/session_label`, `status`
+  (`pending|valid|invalid|duplicate_in_batch|exact_duplicate|conflict`), `errors text[]`, `existing jsonb` (conflicting live
+  values), `outcome` (`inserted|skipped_*|replaced`). Admin read-only via RLS; no other privileges.
+* `app_settings`: `import_max_file_bytes` (5 242 880, advisory), `import_max_rows` (5000), `import_chunk_max_rows` (500).
+* Guard triggers: `exam_sessions_guard_update` (date/label frozen once allocations exist),
+  `session_rooms_guard_update` (capacity cannot drop below active allocations; `session_id`/`room_id` immutable).
+* Helpers in `eoms_private`: `parse_date`, `norm_session`, `parse_ist`, `ist_text`, `import_validate`, `validate_window`,
+  `lock_room_sessions`, `lock_imports`, JSON builders. None is executable by API roles.
+
+Room codes written through `admin_create_room` / `admin_update_room` are stored upper-case; Phase 1 SQL inserts are unchanged.
+
 ## Migrations
 
-`0001_schema.sql` tables/constraints/triggers -> `0002_functions.sql` allocation engine and RPCs -> `0003_security.sql`
-RLS and grants. Apply in order. `tests/db/00_supabase_shim.sql` is test-only and must never be deployed.
+| File | Contents |
+|---|---|
+| `0001_schema.sql` | Phase 1 tables, constraints, integrity triggers |
+| `0002_functions.sql` | Phase 1 allocation engine, `checkin`, `get_checkin_status`, admin late/re-entry/release/reassign/flag |
+| `0003_security.sql` | Phase 1 RLS, privileges |
+| `0004_admin_schema.sql` | Phase 2A import tables/columns, settings, guard triggers, helpers, `import_validate` |
+| `0005_admin_config_functions.sql` | session / room / session-room admin RPCs |
+| `0006_import_functions.sql` | import RPCs (begin, add_rows, validate, preview, cancel, commit, replace_conflicts) |
+| `0007_admin_security.sql` | RLS and grants for the Phase 2A objects |
+
+Apply in order. Phase 1 files are unchanged by Phase 2A. `tests/db/00_supabase_shim.sql` is test-only and must never be deployed.
