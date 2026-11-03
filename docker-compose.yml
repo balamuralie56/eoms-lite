@@ -1,0 +1,13 @@
+# Local PostgreSQL for DATABASE TESTS ONLY. Throwaway credentials, bound to localhost.
+# Never point this at, or reuse values from, any production system.
+services:
+  db:
+    image: postgres:17
+    container_name: eoms-lite-test-db
+    environment:
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "127.0.0.1:54329:5432"
+    command: ["postgres", "-c", "max_connections=300", "-c", "fsync=off"]
+    tmpfs:
+      - /var/lib/postgresql/data

@@ -1,0 +1,18 @@
+{
+  "name": "eoms-lite",
+  "version": "0.1.0",
+  "private": true,
+  "description": "EOMS Lite - lightweight QR-based invigilator room allocation (Phase 1: database + allocation engine)",
+  "type": "commonjs",
+  "scripts": {
+    "db:up": "docker compose up -d db",
+    "db:down": "docker compose down",
+    "test": "node --test --test-concurrency=1 \"tests/db/*.test.js\""
+  },
+  "devDependencies": {
+    "pg": "^8.13.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
