@@ -143,7 +143,7 @@ test('public responses expose only the minimum: no other employee data, no sched
   });
 });
 
-test('catalog: SECURITY DEFINER functions pin search_path; no function is executable by PUBLIC; anon has only the two public RPCs', async () => {
+test('catalog: SECURITY DEFINER functions pin search_path; no function is executable by PUBLIC; anon has only the three public functions', async () => {
   await withWorld(async (w) => {
     const fns = await w.q(`
       select n.nspname, p.proname, p.prosecdef, p.proconfig, p.proacl is null as default_acl,
@@ -161,7 +161,8 @@ test('catalog: SECURITY DEFINER functions pin search_path; no function is execut
       }
     }
     const anonCan = fns.filter((f) => f.anon_exec).map((f) => f.proname).sort();
-    assert.deepEqual(anonCan, ['checkin', 'get_checkin_status']);
+    // closed allow-list of the whole anonymous surface: check-in, status, and public branding (get_public_config)
+    assert.deepEqual(anonCan, ['checkin', 'get_checkin_status', 'get_public_config']);
     for (const f of fns.filter((x) => x.nspname === 'public' && x.proname.startsWith('admin_'))) {
       assert.equal(f.auth_exec, true);
       assert.equal(f.anon_exec, false);

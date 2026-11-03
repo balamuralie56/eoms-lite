@@ -138,7 +138,7 @@ test('the admin id in an audit row comes from the JWT, never from an argument', 
     const params = await w.q(`select p.proname, pg_get_function_arguments(p.oid) args from pg_proc p
                                 join pg_namespace n on n.oid = p.pronamespace
                                where n.nspname = 'public' and p.proname like 'admin\\_%'`);
-    assert.ok(params.length >= 24);
+    assert.ok(params.length >= 40);
     for (const p of params) assert.ok(!/admin_id|actor|user_id|approved_by|created_by/i.test(p.args), p.proname + ' ' + p.args);
   });
 });
@@ -152,7 +152,9 @@ test('catalog: every admin function is SECURITY DEFINER, pins search_path, and i
              has_function_privilege('public', p.oid, 'execute') public_exec
         from pg_proc p join pg_namespace n on n.oid = p.pronamespace
        where n.nspname = 'public' and p.proname like 'admin\\_%'`);
-    assert.equal(fns.length, 24, 'admin function count (7 Phase 1 + 17 Phase 2A)');
+    // 7 Phase 1 + 17 Phase 2A + 16 product phase (4 settings/maintenance/diagnostic + 12 read/report). The count is a
+    // deliberate closed list: adding an admin function must be a conscious change to this test.
+    assert.equal(fns.length, 40, 'admin function count');
     for (const f of fns) {
       assert.equal(f.prosecdef, true, f.proname);
       assert.ok((f.proconfig || []).join(',').includes('search_path=""'), f.proname + ' search_path');
