@@ -3,6 +3,7 @@
 //   /auth/v1/*   -> a MINIMAL STAND-IN for Supabase Auth (GoTrue): password login, refresh, user, logout.
 //   /__test/*    -> test helpers (reset database, create admins). Refused unless EOMS_LOCAL_STACK=1.
 // This is NOT Supabase. It exists so the real frontend + real RPCs + real PostgREST can be exercised end to end.
+import fs from 'node:fs';
 import http from 'node:http';
 import crypto from 'node:crypto';
 import pg from 'pg';
@@ -33,10 +34,28 @@ function verifyJwt(token) {
   return p.exp && p.exp * 1000 < Date.now() ? null : p;
 }
 
-/** email -> { id, password } ; refresh token -> email */
+/**
+ * email -> { id, password } (tests, in memory) or { id, salt, hash } (when STACK_USERS_FILE is set: persisted with scrypt,
+ * never in clear). refresh token -> email (in memory: a restart simply asks people to sign in again).
+ */
 const users = new Map();
 const refresh = new Map();
 let accessTtl = 3600;
+
+const USERS_FILE = process.env.STACK_USERS_FILE || null;
+const TEST_ENDPOINTS = process.env.STACK_DISABLE_TEST_ENDPOINTS !== '1';
+const hashPw = (pw, salt = crypto.randomBytes(16).toString('hex')) => ({ salt, hash: crypto.scryptSync(pw, salt, 32).toString('hex') });
+const passwordOk = (u, pw) => {
+  if (typeof pw !== 'string') return false;
+  if (u.password !== undefined) return u.password === pw;
+  return crypto.timingSafeEqual(Buffer.from(u.hash, 'hex'), crypto.scryptSync(pw, u.salt, 32));
+};
+const persistUsers = () => {
+  if (USERS_FILE) fs.writeFileSync(USERS_FILE, JSON.stringify([...users].map(([email, u]) => ({ email, ...u }))));
+};
+if (USERS_FILE && fs.existsSync(USERS_FILE)) {
+  for (const { email, ...u } of JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'))) users.set(email, u);
+}
 
 function session(email) {
   const u = users.get(email);
@@ -80,12 +99,13 @@ async function resetDb() {
         app_title = 'Invigilator Check-In', logo_data_url = null, contact_instructions = 'Please contact the examination cell.',
         support_info = null, default_items_per_page = 25 where id = 1`);
   } finally { await c.end(); }
-  users.clear(); refresh.clear(); accessTtl = 3600;
+  users.clear(); refresh.clear(); accessTtl = 3600; persistUsers();
 }
 
 async function addAdmin({ email, password, active = true, admin = true }) {
   const id = crypto.randomUUID();
-  users.set(email, { id, password });
+  users.set(email, USERS_FILE ? { id, ...hashPw(password) } : { id, password });
+  persistUsers();
   if (admin) {
     const c = new pg.Client({ connectionString: DB_URL });
     await c.connect();
@@ -119,7 +139,7 @@ const server = http.createServer(async (req, res) => {
     const grant = url.searchParams.get('grant_type');
     if (grant === 'password') {
       const u = users.get(String(body.email || '').toLowerCase()) || users.get(body.email);
-      if (!u || u.password !== body.password) {
+      if (!u || !passwordOk(u, body.password)) {
         return json(req, res, 400, { code: 400, error_code: 'invalid_credentials', msg: 'Invalid login credentials' });
       }
       return json(req, res, 200, session(body.email));
@@ -139,6 +159,7 @@ const server = http.createServer(async (req, res) => {
   }
   if (url.pathname === '/auth/v1/logout') { res.writeHead(204, CORS(req)); return res.end(); }
 
+  if (url.pathname.startsWith('/__test/') && !TEST_ENDPOINTS) return json(req, res, 404, { message: 'not found' });   // permanent/demo mode: no reset/admin helpers
   if (url.pathname.startsWith('/__test/')) {
     const body = req.method === 'POST' ? JSON.parse((await readBody(req)).toString() || '{}') : {};
     try {

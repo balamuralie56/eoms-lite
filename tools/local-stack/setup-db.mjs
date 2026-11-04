@@ -14,14 +14,23 @@ if (!/@(127\.0\.0\.1|localhost)[:/]/.test(ADMIN_URL)) {
 }
 const withDb = (db) => { const u = new URL(ADMIN_URL); u.pathname = '/' + db; return u.toString(); };
 
+const NAME = process.env.EOMS_DB_NAME || 'eoms_e2e';
+if (!/^[a-z0-9_]+$/.test(NAME)) { console.error('invalid EOMS_DB_NAME'); process.exit(1); }
+
 async function main() {
   const admin = new pg.Client({ connectionString: ADMIN_URL });
   await admin.connect();
-  await admin.query('drop database if exists eoms_e2e with (force)');
-  await admin.query('create database eoms_e2e');
+  const exists = (await admin.query('select 1 from pg_database where datname = $1', [NAME])).rows.length > 0;
+  // the throwaway test database is recreated every time; any OTHER (long-lived demo) database is never dropped without --recreate
+  if (exists && NAME !== 'eoms_e2e' && !process.argv.includes('--recreate')) {
+    console.error(`database ${NAME} already exists. Refusing to drop it. Pass --recreate to wipe it deliberately.`);
+    process.exit(1);
+  }
+  await admin.query(`drop database if exists ${NAME} with (force)`);
+  await admin.query(`create database ${NAME}`);
   await admin.end();
 
-  const db = new pg.Client({ connectionString: withDb('eoms_e2e') });
+  const db = new pg.Client({ connectionString: withDb(NAME) });
   await db.connect();
   await db.query(fs.readFileSync(path.join(root, 'tests', 'db', '00_supabase_shim.sql'), 'utf8'));
   const dir = path.join(root, 'supabase', 'migrations');
@@ -35,6 +44,6 @@ async function main() {
     grant anon, authenticated to authenticator;
     grant usage on schema public to authenticator;`);
   await db.end();
-  console.log('eoms_e2e ready (migrations applied: ' + fs.readdirSync(dir).filter((x) => x.endsWith('.sql')).length + ')');
+  console.log(NAME + ' ready (migrations applied: ' + fs.readdirSync(dir).filter((x) => x.endsWith('.sql')).length + ')');
 }
 main().catch((e) => { console.error(e); process.exit(1); });
