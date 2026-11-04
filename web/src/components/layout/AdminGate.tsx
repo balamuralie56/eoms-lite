@@ -23,10 +23,10 @@ const NAV = [
 
 function SessionPicker() {
   const { sessions, selectedId, select } = useSessions();
-  if (sessions.length === 0) return <p className="text-xs text-slate-300">No sessions yet</p>;
+  if (sessions.length === 0) return <p className="text-xs text-slate-700">No sessions yet</p>;
   return (
     <div>
-      <label htmlFor="session-picker" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-blue-200">Working session</label>
+      <label htmlFor="session-picker" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-700">Working session</label>
       <Select id="session-picker" value={selectedId ?? ''} onChange={(e) => select(e.target.value || null)} className="!py-1.5 text-sm">
         {sessions.map((s) => <option key={s.id} value={s.id}>{formatExamDate(s.exam_date)} · {s.session_label}{s.is_active ? '' : ' (inactive)'}</option>)}
       </Select>
@@ -42,7 +42,7 @@ function Shell() {
     <nav aria-label="Admin" className="space-y-1">
       {NAV.map((n) => (
         <NavLink key={n.to} to={n.to} end={n.end} onClick={() => setOpen(false)}
-          className={({ isActive }) => cx('flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium', isActive ? 'bg-white/15 text-white' : 'text-blue-100 hover:bg-white/10')}>
+          className={({ isActive }) => cx('flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium', isActive ? 'bg-blue-700 text-white' : 'text-slate-800 hover:bg-black/5')}>
           <n.icon className="h-4 w-4" aria-hidden />{n.label}
         </NavLink>
       ))}
@@ -53,29 +53,29 @@ function Shell() {
       <Link to="/admin" className="flex items-center gap-2">
         {config.logo_data_url
           ? <img src={config.logo_data_url} alt="" className="h-9 w-9 rounded bg-white object-contain p-0.5" />
-          : <ShieldCheck className="h-8 w-8 text-white" aria-hidden />}
-        <span className="text-sm font-bold leading-tight text-white">{config.exam_cell_name}<span className="block text-xs font-normal text-blue-200">{config.institution_name}</span></span>
+          : <ShieldCheck className="h-8 w-8 text-blue-700" aria-hidden />}
+        <span className="text-sm font-bold leading-tight text-slate-900">{config.exam_cell_name}<span className="block text-xs font-normal text-slate-700">{config.institution_name}</span></span>
       </Link>
       <SessionPicker />
       {nav}
-      <div className="mt-auto space-y-2 border-t border-white/20 pt-3">
-        <p className="truncate text-xs text-blue-200" title={email ?? ''} data-testid="admin-identity">Signed in as <span className="font-semibold text-white">{email}</span></p>
+      <div className="mt-auto space-y-2 border-t border-black/10 pt-3">
+        <p className="truncate text-xs text-slate-700" title={email ?? ''} data-testid="admin-identity">Signed in as <span className="font-semibold text-slate-900">{email}</span></p>
         <Button variant="secondary" size="sm" className="w-full" onClick={() => void signOut()}><LogOut className="h-4 w-4" aria-hidden />Sign out</Button>
       </div>
     </div>
   );
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[16rem_1fr]">
-      <aside className="hidden bg-blue-950 lg:block">{side}</aside>
-      <header className="sticky top-0 z-30 flex items-center justify-between bg-blue-950 px-4 py-3 lg:hidden">
-        <span className="text-sm font-bold text-white">{config.exam_cell_name}</span>
-        <button type="button" aria-label="Open menu" aria-expanded={open} onClick={() => setOpen(true)} className="rounded p-1 text-white"><Menu className="h-6 w-6" aria-hidden /></button>
+      <aside className="hidden bg-yellow-500 lg:block">{side}</aside>
+      <header className="sticky top-0 z-30 flex items-center justify-between bg-yellow-500 px-4 py-3 lg:hidden">
+        <span className="text-sm font-bold text-slate-900">{config.exam_cell_name}</span>
+        <button type="button" aria-label="Open menu" aria-expanded={open} onClick={() => setOpen(true)} className="rounded p-1 text-slate-900"><Menu className="h-6 w-6" aria-hidden /></button>
       </header>
       {open && (
         <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
           <div className="absolute inset-0 bg-slate-900/50" onClick={() => setOpen(false)} />
-          <div className="absolute inset-y-0 left-0 w-72 overflow-y-auto bg-blue-950">
-            <button type="button" aria-label="Close menu" onClick={() => setOpen(false)} className="absolute right-3 top-3 rounded p-1 text-white"><X className="h-5 w-5" aria-hidden /></button>
+          <div className="absolute inset-y-0 left-0 w-72 overflow-y-auto bg-yellow-500">
+            <button type="button" aria-label="Close menu" onClick={() => setOpen(false)} className="absolute right-3 top-3 rounded p-1 text-slate-900"><X className="h-5 w-5" aria-hidden /></button>
             {side}
           </div>
         </div>

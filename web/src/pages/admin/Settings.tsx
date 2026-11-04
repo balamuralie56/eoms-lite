@@ -70,7 +70,7 @@ function BrandingForm({ data: d, onSaved }: { data: AdminSettings; onSaved: () =
             <p className="text-sm font-medium text-slate-800">Logo</p>
             <div className="mt-1 flex flex-wrap items-center gap-3">
               {logo ? <img src={logo} alt="Current logo" className="h-16 w-16 rounded border border-slate-300 bg-white object-contain p-1" /> : <span className="text-sm text-slate-600">No logo set</span>}
-              <label className="cursor-pointer rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 focus-within:outline-2 focus-within:outline-amber-700">
+              <label className="cursor-pointer rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 focus-within:outline-2 focus-within:outline-blue-700">
                 Choose image<input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={onLogo} data-testid="logo-file" />
               </label>
               {logo && <Button variant="ghost" size="sm" onClick={() => { setLogo(null); setLogoChanged(true); }}><Trash2 className="h-4 w-4" aria-hidden />Remove</Button>}

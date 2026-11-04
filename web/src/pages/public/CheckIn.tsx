@@ -15,14 +15,14 @@ const ID_RE = /^[A-Za-z0-9._/-]{1,50}$/;
 function Brand() {
   const { config } = useConfig();
   return (
-    <header className="bg-blue-900 text-white">
+    <header className="bg-yellow-500 text-slate-900">
       <div className="mx-auto flex max-w-xl items-center gap-3 px-4 py-4">
         {config.logo_data_url
           ? <img src={config.logo_data_url} alt="" className="h-12 w-12 shrink-0 rounded bg-white object-contain p-1" />
           : <ShieldCheck className="h-10 w-10 shrink-0" aria-hidden />}
         <div className="min-w-0">
           <p className="truncate text-lg font-bold leading-tight">{config.institution_name}</p>
-          <p className="truncate text-sm text-blue-100">{config.exam_cell_name}</p>
+          <p className="truncate text-sm text-slate-800">{config.exam_cell_name}</p>
         </div>
       </div>
     </header>
@@ -108,8 +108,8 @@ function Success({ r, onBack }: { r: Extract<CheckinResult, { ok: true }>; onBac
         <h1 ref={heading} tabIndex={-1} className="flex items-center gap-2 text-lg font-bold outline-none"><CheckCircle2 className="h-6 w-6 text-green-700" aria-hidden />{o.title}</h1>
         <p className="mt-1 text-sm">{o.body}</p>
       </div>
-      <div className="overflow-hidden rounded-2xl border-2 border-amber-700 bg-white text-center shadow">
-        <p className="bg-amber-700 py-1.5 text-xs font-bold uppercase tracking-[0.2em] text-white">Your room</p>
+      <div className="overflow-hidden rounded-2xl border-2 border-blue-700 bg-white text-center shadow">
+        <p className="bg-blue-700 py-1.5 text-xs font-bold uppercase tracking-[0.2em] text-white">Your room</p>
         <p data-testid="room-code" className="break-words px-3 py-5 text-6xl font-extrabold leading-none text-blue-950 sm:text-7xl">{r.room_code}</p>
         {where && <p className="flex items-center justify-center gap-1 pb-4 text-base font-semibold text-slate-800"><Building2 className="h-4 w-4" aria-hidden />{where}</p>}
       </div>

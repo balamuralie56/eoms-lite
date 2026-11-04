@@ -49,7 +49,7 @@ export default function Reports() {
             {REPORTS.map((r) => (
               <li key={r.key}>
                 <button type="button" aria-pressed={r.key === key} onClick={() => setKey(r.key)} data-testid={`report-${r.key}`}
-                  className={`flex w-full items-start gap-2 rounded-lg px-3 py-2 text-left text-sm ${r.key === key ? 'bg-amber-50 font-semibold text-amber-900 ring-1 ring-amber-300' : 'text-slate-800 hover:bg-slate-50'}`}>
+                  className={`flex w-full items-start gap-2 rounded-lg px-3 py-2 text-left text-sm ${r.key === key ? 'bg-blue-50 font-semibold text-blue-900 ring-1 ring-blue-300' : 'text-slate-800 hover:bg-slate-50'}`}>
                   <FileText className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />{r.label}
                 </button>
               </li>
