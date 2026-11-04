@@ -35,6 +35,13 @@ export const api = {
     callRpc<{ ok: true; active_allocations?: number }>('admin_set_session_active', {
       p_session_id: id, p_active: active, p_reason: reason, p_confirm: confirm,
     }),
+  importSessions: (rows: Array<{ exam_date: string; session_label: string; opens: string; closes: string; active: string }>, confirm: boolean) =>
+    callRpc<{
+      ok: true; rows?: number; valid?: number; invalid?: number;
+      errors?: Array<{ row: number; exam_date: string; session: string; errors: string[] }>;
+      would_create?: number; would_skip_existing?: number;
+      created?: number; skipped_existing?: number; skipped_overlap?: number;
+    }>('admin_import_sessions', { p_rows: rows, p_confirm: confirm }),
 
   // ---- rooms ----
   listRooms: () => callRpc<RoomRow[]>('admin_list_rooms'),

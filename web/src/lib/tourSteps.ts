@@ -15,6 +15,7 @@ export const TOUR_STEPS: Record<string, TourStep[]> = {
   sessions: [
     NAV_STEP,
     { selector: '[data-testid="new-session"]', title: 'Create a session', body: 'Pick the exam date, Forenoon or Afternoon, and the check-in window in IST. Active sessions can never overlap.' },
+    { selector: '[data-testid="import-sessions"]', title: 'Import many sessions at once', body: 'Setting up a whole exam period? Upload a CSV or XLSX with Examination Date, Session, Check-in Opens and Check-in Closes — it creates every session in one validated step.' },
     { selector: 'button[aria-label^="Activate session"], button[aria-label^="Deactivate session"]', title: 'Activate when ready', body: 'Employees can only check in while their session is Active and inside its window. You can deactivate afterwards — existing allocations stay in place.' },
   ],
   rooms: [

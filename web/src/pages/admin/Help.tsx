@@ -18,6 +18,7 @@ export default function Help() {
           <p>An examination session is one date plus Forenoon (FN) or Afternoon (AN). Each session has its own check-in window, entered in IST — employees can only check in from the opening time up to (but not including) the closing time.</p>
           <p>Create a session on the <strong>Sessions</strong> page before anything else for that exam day. Two active sessions can never have overlapping check-in windows — the system refuses to save one that would overlap.</p>
           <p>A session's date and FN/AN cannot be changed once it has a schedule or any allocation — only its check-in window can still be edited. Deactivating a session stops new check-ins immediately; allocations already made are kept and are not affected.</p>
+          <p>Setting up a whole exam period at once? Use <strong>Import sessions</strong> on the Sessions page to upload a CSV or XLSX with Examination Date, Session, Check-in Opens and Check-in Closes (HH:MM, 24-hour IST, same day as the exam date) and an optional Active column. A session that already exists is skipped, never overwritten; a window that overlaps another active session is skipped and reported, without blocking the rest of the file.</p>
         </Section>
 
         <Section title="2. Rooms — where invigilators are placed">

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Pencil, Plus, Power } from 'lucide-react';
+import { Pencil, Plus, Power, Upload } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useSessions } from '../../context/SessionContext';
 import { errText } from '../../lib/adminHooks';
@@ -9,6 +9,7 @@ import type { SessionSummary } from '../../lib/types';
 import { Tour } from '../../components/tour/Tour';
 import { useAutoTour } from '../../components/tour/useAutoTour';
 import { TOUR_STEPS } from '../../lib/tourSteps';
+import SessionImportWizard from '../../components/SessionImportWizard';
 
 const TONE = { OPEN: 'green', UPCOMING: 'blue', CLOSED: 'neutral', INACTIVE: 'amber' } as const;
 
@@ -67,6 +68,7 @@ export default function Sessions() {
   const [form, setForm] = useState<{ existing?: SessionSummary } | null>(null);
   const [toggle, setToggle] = useState<SessionSummary | null>(null);
   const [filter, setFilter] = useState('');
+  const [importOpen, setImportOpen] = useState(false);
   const tour = useAutoTour('sessions', TOUR_STEPS.sessions);
 
   const rows = sessions.filter((s) => !filter || (filter === 'active' ? s.is_active : filter === 'inactive' ? !s.is_active : s.state === filter));
@@ -91,7 +93,10 @@ export default function Sessions() {
   return (
     <>
       <PageHeader title="Examination sessions" subtitle="Configure when check-in opens and closes. FN and AN are independent sessions."
-        actions={<Button onClick={() => setForm({})} data-testid="new-session"><Plus className="h-4 w-4" aria-hidden />New session</Button>} />
+        actions={<div className="flex gap-2">
+          <Button variant="secondary" onClick={() => setImportOpen(true)} data-testid="import-sessions"><Upload className="h-4 w-4" aria-hidden />Import sessions</Button>
+          <Button onClick={() => setForm({})} data-testid="new-session"><Plus className="h-4 w-4" aria-hidden />New session</Button>
+        </div>} />
       <Card title="Session history" actions={
         <Select aria-label="Filter sessions" value={filter} onChange={(e) => setFilter(e.target.value)} className="w-40 !py-1.5">
           <option value="">All sessions</option><option value="OPEN">Open now</option><option value="UPCOMING">Upcoming</option>
@@ -100,6 +105,7 @@ export default function Sessions() {
         <DataTable caption="Examination sessions" columns={cols} rows={rows} rowKey={(s) => s.id} loading={loading}
           empty={<EmptyState title="No sessions">Create the first examination session to begin.</EmptyState>} />
       </Card>
+      {importOpen && <SessionImportWizard onClose={() => setImportOpen(false)} onChanged={() => { void refresh(); }} />}
       {form &&<SessionForm existing={form.existing} onClose={() => setForm(null)} onSaved={() => { void refresh(); }} />}
       {toggle && (
         <ConfirmDialog
