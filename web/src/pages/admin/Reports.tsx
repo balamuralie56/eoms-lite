@@ -7,6 +7,9 @@ import { Alert, Button, Card, DataTable, EmptyState, Field, Input, PageHeader, S
 import { exportReport, REPORTS } from '../../lib/reports';
 import { formatExamDate } from '../../lib/time';
 import type { ExportFormat } from '../../lib/export';
+import { Tour } from '../../components/tour/Tour';
+import { useAutoTour } from '../../components/tour/useAutoTour';
+import { TOUR_STEPS } from '../../lib/tourSteps';
 
 const label = (key: string) => key.replace(/_ist$/, ' (IST)').replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
 
@@ -18,6 +21,7 @@ export default function Reports() {
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [busy, setBusy] = useState<ExportFormat | null>(null);
+  const tour = useAutoTour('reports', TOUR_STEPS.reports);
   const def = REPORTS.find((r) => r.key === key)!;
   const effectiveSession = def.session ? (sessionId || selectedId || '') : '';
   const params = {
@@ -85,6 +89,7 @@ export default function Reports() {
           </Card>
         </div>
       </div>
+      {tour.running && <Tour steps={tour.steps} onDone={tour.finish} onSkip={tour.finish} />}
     </>
   );
 }

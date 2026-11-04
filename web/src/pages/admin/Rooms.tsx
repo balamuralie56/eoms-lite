@@ -7,6 +7,9 @@ import { Alert, Badge, Button, Card, ConfirmDialog, DataTable, EmptyState, Field
 import { formatExamDate } from '../../lib/time';
 import type { RoomMonitorRow, RoomRow } from '../../lib/types';
 import { roomStatusBadge } from './Dashboard';
+import { Tour } from '../../components/tour/Tour';
+import { useAutoTour } from '../../components/tour/useAutoTour';
+import { TOUR_STEPS } from '../../lib/tourSteps';
 
 function CapacityDialog({ row, onClose, onDone }: { row: RoomMonitorRow; onClose: () => void; onDone: () => void }) {
   const [cap, setCap] = useState(String(row.capacity));
@@ -112,6 +115,7 @@ export default function Rooms() {
   const [linkToggle, setLinkToggle] = useState<RoomMonitorRow | null>(null);
   const [remove, setRemove] = useState<RoomMonitorRow | null>(null);
   const [roomToggle, setRoomToggle] = useState<RoomRow | null>(null);
+  const tour = useAutoTour('rooms', TOUR_STEPS.rooms);
 
   const reload = () => { monitor.reload(); all.reload(); };
   const assignedIds = useMemo(() => new Set((monitor.data ?? []).map((r) => r.room_id)), [monitor.data]);
@@ -208,6 +212,7 @@ export default function Rooms() {
             : <p>The room can receive allocations again in sessions where it is assigned and active.</p>}
         </ConfirmDialog>
       )}
+      {tour.running && <Tour steps={tour.steps} onDone={tour.finish} onSkip={tour.finish} />}
     </>
   );
 }

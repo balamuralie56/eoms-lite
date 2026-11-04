@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useQuery } from '../../lib/hooks';
-import { ArrowLeft, Building2, CheckCircle2, Clock, Download, Loader2, LogIn, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Building2, CheckCircle2, ChevronDown, Clock, Download, HelpCircle, Loader2, LogIn, ShieldCheck } from 'lucide-react';
 import { api } from '../../lib/api';
 import { checkinWithRetry, describeOutcome } from '../../lib/checkin';
+import { CHECKIN_HELP } from '../../lib/checkinHelp';
 import type { AllocationInfo, CheckinResult, CheckinStatus } from '../../lib/types';
 import { useConfig } from '../../context/ConfigContext';
 import { Alert, Button, Field, Input, Spinner } from '../../components/ui';
@@ -48,6 +49,25 @@ function StatusBanner({ status, failed }: { status: CheckinStatus | undefined; f
       <p className="flex items-center gap-2 font-semibold text-slate-800"><span className="h-2.5 w-2.5 rounded-full bg-slate-400" aria-hidden />Check-in is closed</p>
       <p className="mt-1 text-sm text-slate-700">There is no session open for check-in right now.</p>
     </div>
+  );
+}
+
+function HelpPanel() {
+  return (
+    <details className="group rounded-xl border border-slate-200 bg-white">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-sm font-semibold text-slate-800 marker:content-none">
+        <span className="flex items-center gap-2"><HelpCircle className="h-4 w-4 text-blue-700" aria-hidden />What does my message mean?</span>
+        <ChevronDown className="h-4 w-4 text-slate-500 transition-transform group-open:rotate-180" aria-hidden />
+      </summary>
+      <dl className="space-y-3 border-t border-slate-200 px-4 py-3">
+        {CHECKIN_HELP.map((h) => (
+          <div key={h.title}>
+            <dt className="text-sm font-semibold text-slate-900">{h.title}</dt>
+            <dd className="mt-0.5 text-sm text-slate-700">{h.meaning}</dd>
+          </div>
+        ))}
+      </dl>
+    </details>
   );
 }
 
@@ -199,6 +219,7 @@ export default function CheckIn() {
             )}
           </>
         )}
+        <HelpPanel />
         <footer className="space-y-1 pt-2 text-center text-xs text-slate-600">
           {config.support_info && <p>{config.support_info}</p>}
           <p>Your Employee ID is used only to find your duty. It does not prove who you are; the examination cell may ask you to verify in person.</p>

@@ -7,6 +7,9 @@ import { ErrorBox, useAdminQuery } from '../../lib/adminHooks';
 import { Badge, Card, DataTable, EmptyState, Input, PageHeader, Select, Skeleton, StatCard, type Column } from '../../components/ui';
 import { formatExamDate, formatIst, formatIstTime, sessionName } from '../../lib/time';
 import type { Overview, RoomMonitorRow } from '../../lib/types';
+import { Tour } from '../../components/tour/Tour';
+import { useAutoTour } from '../../components/tour/useAutoTour';
+import { TOUR_STEPS } from '../../lib/tourSteps';
 
 const STATE_TONE = { OPEN: 'green', UPCOMING: 'blue', CLOSED: 'neutral', INACTIVE: 'amber', NONE: 'neutral' } as const;
 const STATE_LABEL = { OPEN: 'Check-in open', UPCOMING: 'Upcoming', CLOSED: 'Closed', INACTIVE: 'Inactive', NONE: 'No session' } as const;
@@ -22,6 +25,7 @@ export default function Dashboard() {
   const rooms = useAdminQuery(() => (sessionId ? api.roomMonitor(sessionId) : Promise.resolve([] as RoomMonitorRow[])), [sessionId], { pollMs: 8000, enabled: Boolean(sessionId) });
   const [q, setQ] = useState('');
   const [status, setStatus] = useState('');
+  const tour = useAutoTour('dashboard', TOUR_STEPS.dashboard);
 
   const filtered = useMemo(() => (rooms.data ?? []).filter((r) =>
     (!status || r.status === status) && (!q.trim() || `${r.room_code} ${r.building ?? ''}`.toLowerCase().includes(q.trim().toLowerCase()))), [rooms.data, q, status]);
@@ -103,6 +107,7 @@ export default function Dashboard() {
           </div>
         </>
       )}
+      {tour.running && <Tour steps={tour.steps} onDone={tour.finish} onSkip={tour.finish} />}
     </>
   );
 }

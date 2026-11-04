@@ -7,6 +7,9 @@ import { Alert, Button, Card, EmptyState, Field, Input, PageHeader, Pagination, 
 import { formatIst, istTimestampFilename } from '../../lib/time';
 import { downloadTable, exportFilename, type ExportFormat } from '../../lib/export';
 import type { AuditRow } from '../../lib/types';
+import { Tour } from '../../components/tour/Tour';
+import { useAutoTour } from '../../components/tour/useAutoTour';
+import { TOUR_STEPS } from '../../lib/tourSteps';
 
 const PAGE = 25;
 
@@ -29,6 +32,7 @@ export default function Audit() {
   const [offset, setOffset] = useState(0);
   const [open, setOpen] = useState<number | null>(null);
   const [exporting, setExporting] = useState(false);
+  const tour = useAutoTour('audit', TOUR_STEPS.audit);
   const term = useDebounced(search);
   const range = { from: from ? istDayStart(from) : null, to: to ? istNextDayStart(to) : null };
   const q = useAdminQuery(() => api.listAudit({ search: term, action: action || null, ...range, limit: PAGE, offset }), [term, action, from, to, offset]);
@@ -106,6 +110,7 @@ export default function Audit() {
         {q.data && <Pagination total={q.data.total} offset={offset} limit={PAGE} onChange={setOffset} />}
       </Card>
       <Alert tone="info" className="mt-4">The audit log is append-only in the database: even the application's own administrator accounts have no permission to change or remove entries.</Alert>
+      {tour.running && <Tour steps={tour.steps} onDone={tour.finish} onSkip={tour.finish} />}
     </>
   );
 }

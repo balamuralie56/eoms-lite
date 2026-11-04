@@ -12,6 +12,7 @@ import Verification from './pages/admin/Verification';
 import Audit from './pages/admin/Audit';
 import Reports from './pages/admin/Reports';
 import Settings from './pages/admin/Settings';
+import Help from './pages/admin/Help';
 
 function NotFound() {
   return (
@@ -48,6 +49,7 @@ export default function App() {
         <Route path="audit" element={<Audit />} />
         <Route path="reports" element={<Reports />} />
         <Route path="settings" element={<Settings />} />
+        <Route path="help" element={<Help />} />
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Route>
       <Route path="*" element={<NotFound />} />

@@ -7,6 +7,9 @@ import { useDebounced } from '../../lib/hooks';
 import { Alert, Badge, Button, Card, ConfirmDialog, DataTable, EmptyState, Field, Input, Modal, PageHeader, Pagination, Select, useToast, type Column } from '../../components/ui';
 import { formatExamDate, formatIst } from '../../lib/time';
 import type { AllocationRow, RoomMonitorRow } from '../../lib/types';
+import { Tour } from '../../components/tour/Tour';
+import { useAutoTour } from '../../components/tour/useAutoTour';
+import { TOUR_STEPS } from '../../lib/tourSteps';
 
 const PAGE = 25;
 const SOURCE: Record<string, string> = { normal: 'Check-in', admin_late: 'Late (authorized)', admin_reentry: 'Re-entry (authorized)', admin_correction: 'Correction' };
@@ -64,6 +67,7 @@ export default function Allocations() {
   const [move, setMove] = useState<AllocationRow | null>(null);
   const [release, setRelease] = useState<AllocationRow | null>(null);
   const [reentry, setReentry] = useState<AllocationRow | null>(null);
+  const tour = useAutoTour('allocations', TOUR_STEPS.allocations);
   const term = useDebounced(search);
   const sessionId = scope === 'selected' ? selectedId : null;
   const rooms = useAdminQuery(() => (sessionId ? api.roomMonitor(sessionId) : Promise.resolve([] as RoomMonitorRow[])), [sessionId]);
@@ -126,6 +130,7 @@ export default function Allocations() {
           <p>This is a <strong>one-time permission</strong>. The employee then submits their Employee ID normally and the allocation engine still applies room and capacity rules.</p>
         </ConfirmDialog>
       )}
+      {tour.running && <Tour steps={tour.steps} onDone={tour.finish} onSkip={tour.finish} />}
     </>
   );
 }

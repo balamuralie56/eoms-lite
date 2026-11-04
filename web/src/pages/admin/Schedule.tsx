@@ -9,6 +9,9 @@ import { Badge, Button, Card, ConfirmDialog, DataTable, EmptyState, Input, PageH
 import { formatExamDate, formatIst, istTimestampFilename } from '../../lib/time';
 import { downloadTable, exportFilename, type ExportFormat } from '../../lib/export';
 import type { ImportBatchRow, ScheduleRow } from '../../lib/types';
+import { Tour } from '../../components/tour/Tour';
+import { useAutoTour } from '../../components/tour/useAutoTour';
+import { TOUR_STEPS } from '../../lib/tourSteps';
 
 const PAGE = 25;
 const STATE_BADGE = {
@@ -206,6 +209,7 @@ export default function Schedule() {
   const [wizard, setWizard] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const { refresh } = useSessions();
+  const tour = useAutoTour('schedule', TOUR_STEPS.schedule);
   return (
     <>
       <PageHeader title="Schedule" subtitle="Who is on duty in which session. Import from CSV or XLSX; nothing is overwritten without your explicit decision."
@@ -213,6 +217,7 @@ export default function Schedule() {
       <Tabs tabs={[{ key: 'schedule', label: 'Schedule' }, { key: 'history', label: 'Import history' }]} value={tab} onChange={setTab} />
       {tab === 'schedule' ? <ScheduleList reloadKey={reloadKey} onChanged={() => { setReloadKey((k) => k + 1); void refresh(); }} /> : <ImportHistory reloadKey={reloadKey} />}
       {wizard && <ImportWizard onClose={() => setWizard(false)} onChanged={() => { setReloadKey((k) => k + 1); void refresh(); }} />}
+      {tour.running && <Tour steps={tour.steps} onDone={tour.finish} onSkip={tour.finish} />}
     </>
   );
 }

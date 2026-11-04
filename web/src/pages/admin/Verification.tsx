@@ -7,6 +7,9 @@ import { useDebounced } from '../../lib/hooks';
 import { Alert, Badge, Button, Card, ConfirmDialog, DataTable, EmptyState, Field, Input, Modal, PageHeader, Pagination, Select, Tabs, Textarea, useToast, type Column } from '../../components/ui';
 import { formatExamDate, formatIst, sessionName } from '../../lib/time';
 import type { AuthorizationRow, FlagRow } from '../../lib/types';
+import { Tour } from '../../components/tour/Tour';
+import { useAutoTour } from '../../components/tour/useAutoTour';
+import { TOUR_STEPS } from '../../lib/tourSteps';
 
 const PAGE = 25;
 
@@ -194,6 +197,7 @@ export default function Verification() {
   const [tab, setTab] = useState('flags');
   const [key, setKey] = useState(0);
   const bump = () => setKey((k) => k + 1);
+  const tour = useAutoTour('verification', TOUR_STEPS.verification);
   return (
     <>
       <PageHeader title="Verification and exceptions" subtitle="Manual verification, late arrivals and re-entry. Employees cannot clear these themselves, and the employee ID alone is not proof of identity." />
@@ -201,6 +205,7 @@ export default function Verification() {
       {tab === 'flags' && <Flags />}
       {tab === 'late' && <div className="space-y-5"><AuthorizeForm kind="late" onDone={bump} /><AuthorizationList kind="late" reloadKey={key} onChanged={bump} /></div>}
       {tab === 'reentry' && <div className="space-y-5"><AuthorizeForm kind="reentry" onDone={bump} /><AuthorizationList kind="reentry" reloadKey={key} onChanged={bump} /></div>}
+      {tour.running && <Tour steps={tour.steps} onDone={tour.finish} onSkip={tour.finish} />}
     </>
   );
 }

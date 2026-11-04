@@ -6,6 +6,9 @@ import { errText } from '../../lib/adminHooks';
 import { Alert, Badge, Button, Card, ConfirmDialog, DataTable, EmptyState, Field, Input, Modal, PageHeader, Select, useToast, type Column } from '../../components/ui';
 import { apiToLocalInput, formatExamDate, formatIstTime, istDateString, localInputToApi, sessionName } from '../../lib/time';
 import type { SessionSummary } from '../../lib/types';
+import { Tour } from '../../components/tour/Tour';
+import { useAutoTour } from '../../components/tour/useAutoTour';
+import { TOUR_STEPS } from '../../lib/tourSteps';
 
 const TONE = { OPEN: 'green', UPCOMING: 'blue', CLOSED: 'neutral', INACTIVE: 'amber' } as const;
 
@@ -64,6 +67,7 @@ export default function Sessions() {
   const [form, setForm] = useState<{ existing?: SessionSummary } | null>(null);
   const [toggle, setToggle] = useState<SessionSummary | null>(null);
   const [filter, setFilter] = useState('');
+  const tour = useAutoTour('sessions', TOUR_STEPS.sessions);
 
   const rows = sessions.filter((s) => !filter || (filter === 'active' ? s.is_active : filter === 'inactive' ? !s.is_active : s.state === filter));
 
@@ -114,6 +118,7 @@ export default function Sessions() {
             : <p>Employees will be able to check in during the configured window. Activation is refused if the window overlaps another active session.</p>}
         </ConfirmDialog>
       )}
+      {tour.running && <Tour steps={tour.steps} onDone={tour.finish} onSkip={tour.finish} />}
     </>
   );
 }

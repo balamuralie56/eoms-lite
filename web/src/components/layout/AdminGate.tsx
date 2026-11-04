@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, NavLink, Navigate, Outlet, useLocation } from 'react-router-dom';
 import {
-  BarChart3, CalendarClock, ClipboardList, DoorOpen, FileSpreadsheet, LayoutDashboard, ListChecks, LogOut, Menu, Settings as Cog, ShieldCheck, X,
+  BarChart3, CalendarClock, ClipboardList, DoorOpen, FileSpreadsheet, HelpCircle, LayoutDashboard, ListChecks, LogOut, Menu, Settings as Cog, ShieldCheck, X,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useConfig } from '../../context/ConfigContext';
@@ -19,13 +19,14 @@ const NAV = [
   { to: '/admin/audit', label: 'Audit log', icon: ClipboardList },
   { to: '/admin/reports', label: 'Reports', icon: BarChart3 },
   { to: '/admin/settings', label: 'Settings', icon: Cog },
+  { to: '/admin/help', label: 'Help', icon: HelpCircle },
 ];
 
 function SessionPicker() {
   const { sessions, selectedId, select } = useSessions();
   if (sessions.length === 0) return <p className="text-xs text-slate-700">No sessions yet</p>;
   return (
-    <div>
+    <div data-tour="session-picker">
       <label htmlFor="session-picker" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-700">Working session</label>
       <Select id="session-picker" value={selectedId ?? ''} onChange={(e) => select(e.target.value || null)} className="!py-1.5 text-sm">
         {sessions.map((s) => <option key={s.id} value={s.id}>{formatExamDate(s.exam_date)} · {s.session_label}{s.is_active ? '' : ' (inactive)'}</option>)}
@@ -39,7 +40,7 @@ function Shell() {
   const { config } = useConfig();
   const [open, setOpen] = useState(false);
   const nav = (
-    <nav aria-label="Admin" className="space-y-1">
+    <nav aria-label="Admin" data-tour="nav-list" className="space-y-1">
       {NAV.map((n) => (
         <NavLink key={n.to} to={n.to} end={n.end} onClick={() => setOpen(false)}
           className={({ isActive }) => cx('flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium', isActive ? 'bg-blue-700 text-white' : 'text-slate-800 hover:bg-black/5')}>
