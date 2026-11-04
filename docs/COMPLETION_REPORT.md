@@ -83,3 +83,20 @@ A real Supabase project; a Cloudflare Pages project and a domain with HTTPS; nam
 5. Only then generate the QR (`node scripts/generate-qr.mjs https://<domain> --verified` or Settings), scan with two phones, print.
 6. Decide the open business items: free plan vs a Pro tier for the exam window; whether to add Turnstile; who runs maintenance; data-retention values.
 7. Push to GitHub when you approve (nothing from this milestone has been pushed).
+
+## Update 2026-11-04: first verification on the REAL Supabase project
+
+Project `kuoydzarndvjoroqzqsk` (region ap-south-1). Performed by the owner with `scripts/apply-migrations.mjs`, `scripts/create-admin.mjs` and
+`scripts/verify-deployment.mjs`:
+
+* Migrations 0001-0010 applied without error; first administrator created.
+* Smoke test: **28 / 29 passed**. The one failure was the script's own key check, which did not yet recognise Supabase's newer
+  `sb_publishable_...` key format (fixed: publishable keys accepted, `sb_secret_...` and `service_role` keys refused).
+  - Anonymous access refused for all 14 tables and all admin functions; `eoms_private` not exposed (HTTP 406).
+  - Real Supabase Auth sign-in works; the database recognises the admin (`is_admin` = true); `admin_overview` answers.
+  - **Client-IP header verified:** Supabase passes `cf-connecting-ip` (also `x-forwarded-for`, `sb-forwarded-for`) to the database, so the abuse
+    throttle is active. `cf-connecting-ip` is set by Cloudflare at Supabase's edge; that it carries the end user's address (not a proxy's) is
+    expected but was not separately confirmed from two networks.
+
+Still not done on the real project: frontend deployment (Cloudflare Pages + domain), the frontend running against this project (it should accept the
+publishable key with supabase-js 2.118, untested), load testing, a rehearsal, and the QR code.

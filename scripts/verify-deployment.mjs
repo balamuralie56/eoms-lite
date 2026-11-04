@@ -13,9 +13,14 @@ const isLocal = /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(URL_);
 if (!URL_ || !KEY) { console.error('Set SUPABASE_URL and SUPABASE_ANON_KEY in the environment.'); process.exit(2); }
 if (!isLocal && !/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(URL_)) { console.error('SUPABASE_URL must be https://<project-ref>.supabase.co'); process.exit(2); }
 
+// Supabase has two key formats: the newer "sb_publishable_..." / "sb_secret_..." keys and the legacy JWT anon / service_role keys.
+const keyKind = KEY.startsWith('sb_publishable_') ? 'publishable' : KEY.startsWith('sb_secret_') ? 'secret' : 'jwt';
 let role = '';
-try { role = JSON.parse(Buffer.from(KEY.split('.')[1], 'base64url').toString()).role; } catch { /* not a JWT */ }
-if (role === 'service_role') { console.error('REFUSING: that is the service_role key. It must never leave the server. Use the anon (public) key.'); process.exit(2); }
+if (keyKind === 'jwt') { try { role = JSON.parse(Buffer.from(KEY.split('.')[1], 'base64url').toString()).role; } catch { /* not a JWT */ } }
+if (keyKind === 'secret' || role === 'service_role') {
+  console.error('REFUSING: that is a SECRET key (sb_secret_... or service_role). It must never leave the server. Use the publishable / anon key.');
+  process.exit(2);
+}
 
 const results = [];
 const check = (name, ok, detail = '') => { results.push({ name, ok }); console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? '  ' + detail : ''}`); };
@@ -27,7 +32,8 @@ const call = async (path, { method = 'GET', body, token = KEY, headers = {} } = 
 };
 const denied = (r) => [401, 403, 404, 406].includes(r.status) && !(Array.isArray(r.body) && r.body.length);
 
-check('key is a JWT with role "anon"', role === 'anon', `role=${role || 'unknown'}`);
+check('key is a public key (publishable, or legacy JWT anon)', keyKind === 'publishable' || role === 'anon',
+  keyKind === 'publishable' ? 'sb_publishable_ key' : `legacy JWT role=${role || 'unknown'}`);
 
 const st = await call('/rest/v1/rpc/get_checkin_status', { method: 'POST', body: {} });
 check('public: get_checkin_status answers', st.status === 200 && ['OPEN', 'CLOSED'].includes(st.body?.state), `state=${st.body?.state}`);

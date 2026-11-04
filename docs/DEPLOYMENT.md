@@ -52,7 +52,7 @@ Environment variables (build time; both are public by design):
 | Variable | Value |
 |---|---|
 | `VITE_SUPABASE_URL` | `https://<project-ref>.supabase.co` |
-| `VITE_SUPABASE_ANON_KEY` | the anon public key |
+| `VITE_SUPABASE_ANON_KEY` | the **publishable** key (`sb_publishable_...`) or, on older projects, the legacy anon JWT. Never a `sb_secret_...`/`service_role` key |
 
 Cloudflare Pages -> *Create project -> Connect to Git* (or upload `web/dist`):
 
@@ -85,7 +85,7 @@ Scan the printed sheet with two different phones (iPhone camera and Android came
 ## 5. Abuse protection
 
 * Implemented and tested: per-client throttle in the database (`RATE_LIMITED`), bounded client retries, 2 s lock timeout.
-* **Unverified assumption:** the throttle keys on `cf-connecting-ip`, else the **right-most** `X-Forwarded-For` entry (the left-most is
+* **Verified on the real project (2026-11-04):** Supabase passes `cf-connecting-ip` to the database, so the throttle is active. Design: the throttle keys on `cf-connecting-ip`, else the **right-most** `X-Forwarded-For` entry (the left-most is
   client-controlled and is ignored). Which header Supabase passes to the database must be confirmed: after deploying, sign in,
   open *Settings -> Maintenance and diagnostics -> Inspect request headers* and check that a real client IP header is present.
   If none is, the throttle is inactive (integrity is unaffected).

@@ -107,8 +107,8 @@ Phase 2A notes: every sensitive change records the *before* value; confirmations
 ## Product phase additions (migrations 0008-0010, frontend)
 
 **Client IP for the throttle.** The left-most `X-Forwarded-For` entry is attacker-controlled and is **no longer trusted** (a test
-shows a forged prefix does not dodge the limit). The key is `cf-connecting-ip` if present, else the **right-most** entry. Whether Supabase
-supplies such a header is **unverified**; `Settings -> Inspect request headers` exists to check it on the real project. Without a client IP the
+shows a forged prefix does not dodge the limit). The key is `cf-connecting-ip` if present, else the **right-most** entry. On the real project (2026-11-04) Supabase **does** supply
+`cf-connecting-ip` (verified with scripts/verify-deployment.mjs); `Settings -> Inspect request headers` exists to check it on the real project. Without a client IP the
 throttle is inactive (integrity guarantees are unaffected).
 
 **Public surface is exactly three functions**: `checkin`, `get_checkin_status`, `get_public_config` (branding only). Enforced by a catalog test.
