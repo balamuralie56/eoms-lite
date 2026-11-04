@@ -17,7 +17,9 @@ not assumed here.
 Apply all ten (0001-0010) in order. Do **not** apply `tests/db/00_supabase_shim.sql` (test-only).
 A project that already has an earlier set only needs the later files.
 
-**Option A: SQL editor (simplest).** Paste and run, in order: `0001_schema.sql`, `0002_functions.sql`,
+**Option 0: the migration runner (recommended).** `node scripts/apply-migrations.mjs --yes` with `SUPABASE_DB_URL` set to the *Session pooler* string (see DEPLOYMENT.md §1). Tested locally: refusals, idempotent re-run, changed-file detection, rollback on a failing migration.
+
+**Option A: SQL editor.** Paste and run, in order: `0001_schema.sql`, `0002_functions.sql`,
 `0003_security.sql`, `0004_admin_schema.sql`, `0005_admin_config_functions.sql`, `0006_import_functions.sql`,
 `0007_admin_security.sql`, `0008_settings_maintenance.sql`, `0009_admin_read_functions.sql`, `0010_product_security.sql` (all under `supabase/migrations/`). Run each as one script and stop at the first error.
 
@@ -45,7 +47,9 @@ values ('<uuid-from-auth-users>', 'admin1@example.org', 'Admin One');
 One row per named admin. Deactivate with `update public.admins set is_active = false where user_id = '...'`.
 Note: an authenticated user who is not in `admins` can sign in but sees no data and cannot run admin functions.
 
-## 4. Smoke test on the real project (required; not yet performed)
+## 4. Smoke test on the real project (required; not yet performed on a real project)
+
+Quickest: `node scripts/verify-deployment.mjs` (see its header; 29 checks, passed against the local stack). The manual curl versions follow.
 
 The automated tests run on plain PostgreSQL with a shim, so they do not cover PostgREST, Supabase Auth or the pooler.
 After deploying, verify manually (replace `<url>`/`<anon>`):

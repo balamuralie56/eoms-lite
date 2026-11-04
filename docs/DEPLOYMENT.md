@@ -21,15 +21,18 @@ instructions; nothing here has been executed against real services. Each step sa
 3. **Settings -> API -> Exposed schemas**: only `public`. `eoms_private` must NOT be exposed.
 4. **Authentication -> Sign In / Providers**: turn **off** "Allow new users to sign up" (administrators are created by hand).
    Keep email+password enabled. Under *URL configuration* set the site URL to your final address.
-5. Apply the migrations **in order** (SQL editor, one file at a time, stop at the first error):
-   `supabase/migrations/0001_schema.sql` ... `0010_product_security.sql`. (CLI alternative: `supabase link` then `supabase db push`.)
+5. Apply the migrations **in order** with the runner (recommended):
+   * Supabase dashboard -> **Connect** -> copy the **Session pooler** connection string (IPv4 friendly, port 5432) and fill in the database password.
+   * In PowerShell: `$env:SUPABASE_DB_URL = '<that string>'` then `node scripts/apply-migrations.mjs` (dry run) and `node scripts/apply-migrations.mjs --yes`.
+   * The string is read from the environment only. The runner refuses non-Supabase hosts, applies each file in its own transaction, rolls back on error, records a ledger in the non-exposed `eoms_private` schema, and stops if an already-applied file has changed.
+   * Alternatives: paste each file from `supabase/migrations/` into the SQL editor in order, or `supabase link` + `supabase db push`.
    Do **not** apply `tests/db/00_supabase_shim.sql` (test-only).
 6. Create the first administrator: follow `scripts/bootstrap_admin.sql`.
 7. (Recommended) schedule maintenance with pg_cron: Database -> Extensions -> enable `pg_cron`, then
    `select cron.schedule('eoms-maintenance', '17 * * * *', $$select eoms_private.run_maintenance()$$);`
    Maintenance removes expired throttle records and abandoned import staging. **It never deletes audit records.** Without
    pg_cron an administrator can press *Settings -> Run maintenance now*.
-8. Run the smoke test in `SETUP_SUPABASE.md` §4 (anonymous denial, admin success, header check). **Do not call this deployment
+8. Run the smoke test: set `SUPABASE_URL`, `SUPABASE_ANON_KEY` (and optionally `ADMIN_EMAIL`/`ADMIN_PASSWORD`), then `node scripts/verify-deployment.mjs`. It checks (read-only) that anonymous users cannot read any table or call any admin function, that `eoms_private` is not exposed, that the key is the anon key (it refuses `service_role`), and, with admin credentials, that sign-in works and whether a **client-IP header reaches the database**. **Do not call this deployment verified until it passes on the real project.** (Passed 29/29 against the local test stack only.)
    verified until that has passed on the real project.**
 
 ### Free-tier facts that matter (checked on supabase.com, Nov 2026; re-check before relying on them)
