@@ -63,6 +63,14 @@ export const api = {
     callRpc<Paged<ScheduleRow>>('admin_list_schedule', {
       p_session_id: p.sessionId, p_search: p.search || null, p_status: p.status, p_limit: p.limit, p_offset: p.offset,
     }),
+  deleteScheduleEntry: (employeeId: string, examDate: string, sessionLabel: string) =>
+    callRpc<{ ok: true }>('admin_delete_schedule_entry', {
+      p_employee_id: employeeId, p_exam_date: examDate, p_session_label: sessionLabel,
+    }),
+  clearSessionSchedule: (sessionId: string, confirm: boolean) =>
+    callRpc<{ ok: true; would_delete?: number; would_skip?: number; deleted?: number; skipped?: number }>(
+      'admin_clear_session_schedule', { p_session_id: sessionId, p_confirm: confirm },
+    ),
 
   // ---- allocations ----
   listAllocations: (p: { sessionId: string | null; sessionRoomId: string | null; search: string; state: string; limit: number; offset: number }) =>
