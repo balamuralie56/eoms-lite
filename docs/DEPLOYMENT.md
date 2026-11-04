@@ -27,7 +27,7 @@ instructions; nothing here has been executed against real services. Each step sa
    * The string is read from the environment only. The runner refuses non-Supabase hosts, applies each file in its own transaction, rolls back on error, records a ledger in the non-exposed `eoms_private` schema, and stops if an already-applied file has changed.
    * Alternatives: paste each file from `supabase/migrations/` into the SQL editor in order, or `supabase link` + `supabase db push`.
    Do **not** apply `tests/db/00_supabase_shim.sql` (test-only).
-6. Create the first administrator: follow `scripts/bootstrap_admin.sql`.
+6. Create the first administrator: add the user in the dashboard (Authentication -> Users -> Add user -> Create new user, tick *Auto Confirm User*), then run `node scripts/create-admin.mjs <email> "<Display Name>"` (same environment as step 5; it looks the user up by email). Manual alternative: `scripts/bootstrap_admin.sql`. Deactivate with `--deactivate`.
 7. (Recommended) schedule maintenance with pg_cron: Database -> Extensions -> enable `pg_cron`, then
    `select cron.schedule('eoms-maintenance', '17 * * * *', $$select eoms_private.run_maintenance()$$);`
    Maintenance removes expired throttle records and abandoned import staging. **It never deletes audit records.** Without
