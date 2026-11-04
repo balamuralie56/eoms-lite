@@ -4,11 +4,11 @@ import type { PublicConfig } from '../lib/types';
 import { isConfigured } from '../lib/supabase';
 
 const DEFAULTS: PublicConfig = {
-  institution_name: 'Examination Cell',
-  exam_cell_name: 'Examination Cell',
-  app_title: 'Invigilator Check-In',
+  institution_name: 'Vels Institute of Technology',
+  exam_cell_name: 'Examination Cell (VITEC)',
+  app_title: 'VITEC Invigilator Check-In',
   logo_data_url: null,
-  contact_instructions: 'Please contact the examination cell.',
+  contact_instructions: 'Please contact the VITEC examination cell.',
   support_info: null,
 };
 

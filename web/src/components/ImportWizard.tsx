@@ -118,7 +118,7 @@ export default function ImportWizard({ onClose, onChanged }: { onClose: () => vo
       <ol className="flex flex-wrap gap-2 text-xs font-semibold" aria-label="Import steps">
         {STEPS.map((s) => (
           <li key={s.key} aria-current={s.key === step || (step === 'working' && s.key === 'preview') ? 'step' : undefined}
-            className={cx('rounded-full px-3 py-1', (s.key === step || (step === 'working' && s.key === 'preview')) ? 'bg-blue-800 text-white' : 'bg-slate-100 text-slate-700')}>{s.label}</li>
+            className={cx('rounded-full px-3 py-1', (s.key === step || (step === 'working' && s.key === 'preview')) ? 'bg-amber-700 text-white' : 'bg-slate-100 text-slate-700')}>{s.label}</li>
         ))}
       </ol>
 
@@ -127,11 +127,11 @@ export default function ImportWizard({ onClose, onChanged }: { onClose: () => vo
           <div
             onDragOver={(e: DragEvent) => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)}
             onDrop={(e: DragEvent) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files?.[0]; if (f) void choose(f); }}
-            className={cx('rounded-xl border-2 border-dashed p-8 text-center', dragOver ? 'border-blue-700 bg-blue-50' : 'border-slate-300')}>
+            className={cx('rounded-xl border-2 border-dashed p-8 text-center', dragOver ? 'border-amber-700 bg-amber-50' : 'border-slate-300')}>
             <FileSpreadsheet className="mx-auto h-10 w-10 text-slate-500" aria-hidden />
             <p className="mt-2 font-semibold text-slate-900">Drop a .csv or .xlsx file here</p>
             <p className="text-sm text-slate-600">or</p>
-            <label className="mt-2 inline-flex cursor-pointer items-center gap-2 rounded-lg bg-blue-800 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-900 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-blue-800">
+            <label className="mt-2 inline-flex cursor-pointer items-center gap-2 rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-800 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-amber-700">
               <Upload className="h-4 w-4" aria-hidden />Choose file
               <input type="file" accept=".csv,.xlsx" className="sr-only" data-testid="import-file" onChange={(e) => { const f = e.target.files?.[0]; if (f) void choose(f); e.target.value = ''; }} />
             </label>

@@ -18,7 +18,7 @@ function NotFound() {
     <main className="mx-auto max-w-md px-4 py-20 text-center">
       <h1 className="text-2xl font-bold">Page not found</h1>
       <p className="mt-2 text-slate-600">The page you are looking for does not exist.</p>
-      <a href="/" className="mt-6 inline-block font-semibold text-blue-800 underline">Go to check-in</a>
+      <a href="/" className="mt-6 inline-block font-semibold text-amber-700 underline">Go to check-in</a>
     </main>
   );
 }

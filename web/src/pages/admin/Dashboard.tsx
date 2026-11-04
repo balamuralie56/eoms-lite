@@ -42,7 +42,7 @@ export default function Dashboard() {
     return (
       <>
         <PageHeader title="Dashboard" />
-        <EmptyState title="No examination sessions yet">Start by <Link className="font-semibold text-blue-800 underline" to="/admin/sessions">creating a session</Link>, then add rooms and import the schedule.</EmptyState>
+        <EmptyState title="No examination sessions yet">Start by <Link className="font-semibold text-amber-700 underline" to="/admin/sessions">creating a session</Link>, then add rooms and import the schedule.</EmptyState>
       </>
     );
   }
@@ -88,7 +88,7 @@ export default function Dashboard() {
               </div>
               <ErrorBox error={rooms.error} onRetry={rooms.reload} />
               <DataTable caption="Room allocation monitor" columns={roomCols} rows={filtered} rowKey={(r) => r.session_room_id} loading={rooms.loading}
-                empty={<EmptyState title={(rooms.data ?? []).length ? 'No rooms match the filter' : 'No rooms assigned to this session'}><Link className="font-semibold text-blue-800 underline" to="/admin/rooms">Assign rooms</Link></EmptyState>} />
+                empty={<EmptyState title={(rooms.data ?? []).length ? 'No rooms match the filter' : 'No rooms assigned to this session'}><Link className="font-semibold text-amber-700 underline" to="/admin/rooms">Assign rooms</Link></EmptyState>} />
             </Card>
 
             <Card className="xl:col-span-2" title="Recent activity">

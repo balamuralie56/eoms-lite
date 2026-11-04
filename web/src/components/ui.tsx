@@ -10,10 +10,10 @@ export const cx = (...c: Array<string | false | null | undefined>) => c.filter(B
 
 type Variant = 'primary' | 'secondary' | 'danger' | 'ghost';
 const VARIANTS: Record<Variant, string> = {
-  primary: 'bg-blue-800 text-white hover:bg-blue-900 focus-visible:outline-blue-800 disabled:bg-blue-300',
-  secondary: 'bg-white text-slate-800 border border-slate-300 hover:bg-slate-50 focus-visible:outline-blue-800 disabled:text-slate-400',
+  primary: 'bg-amber-700 text-white hover:bg-amber-800 focus-visible:outline-amber-700 disabled:bg-amber-300',
+  secondary: 'bg-white text-slate-800 border border-slate-300 hover:bg-slate-50 focus-visible:outline-amber-700 disabled:text-slate-400',
   danger: 'bg-red-700 text-white hover:bg-red-800 focus-visible:outline-red-700 disabled:bg-red-300',
-  ghost: 'text-slate-700 hover:bg-slate-100 focus-visible:outline-blue-800 disabled:text-slate-400',
+  ghost: 'text-slate-700 hover:bg-slate-100 focus-visible:outline-amber-700 disabled:text-slate-400',
 };
 
 export function Button({ variant = 'primary', size = 'md', loading, className, children, disabled, ...rest }:
@@ -33,7 +33,7 @@ export function Button({ variant = 'primary', size = 'md', loading, className, c
   );
 }
 
-const fieldCls = 'block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-blue-700 focus:outline-2 focus:outline-offset-0 focus:outline-blue-700 disabled:bg-slate-100';
+const fieldCls = 'block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-amber-700 focus:outline-2 focus:outline-offset-0 focus:outline-amber-700 disabled:bg-slate-100';
 
 export function Field({ label, hint, error, children, htmlFor }: { label: string; hint?: string; error?: string | null; children: ReactNode; htmlFor?: string }) {
   return (
@@ -276,7 +276,7 @@ export function Tabs({ tabs, value, onChange }: { tabs: Array<{ key: string; lab
     <div role="tablist" className="mb-4 flex gap-1 overflow-x-auto border-b border-slate-200">
       {tabs.map((t) => (
         <button key={t.key} role="tab" type="button" aria-selected={value === t.key} onClick={() => onChange(t.key)}
-          className={cx('whitespace-nowrap border-b-2 px-4 py-2 text-sm font-semibold', value === t.key ? 'border-blue-800 text-blue-900' : 'border-transparent text-slate-600 hover:text-slate-900')}>
+          className={cx('whitespace-nowrap border-b-2 px-4 py-2 text-sm font-semibold', value === t.key ? 'border-amber-700 text-amber-900' : 'border-transparent text-slate-600 hover:text-slate-900')}>
           {t.label}
         </button>
       ))}

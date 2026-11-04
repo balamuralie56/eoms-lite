@@ -34,7 +34,7 @@ export default function Login() {
         <div className="mb-6 text-center">
           {config.logo_data_url
             ? <img src={config.logo_data_url} alt="" className="mx-auto h-14 w-14 object-contain" />
-            : <ShieldCheck className="mx-auto h-12 w-12 text-blue-900" aria-hidden />}
+            : <ShieldCheck className="mx-auto h-12 w-12 text-amber-700" aria-hidden />}
           <h1 className="mt-3 text-2xl font-bold text-slate-900">Administrator sign in</h1>
           <p className="text-sm text-slate-600">{config.exam_cell_name}</p>
         </div>
