@@ -23,6 +23,7 @@ export default function Help() {
         <Section title="2. Rooms — where invigilators are placed">
           <p>Rooms are a shared list across every session (code, optional building and floor). A room becomes usable for a specific session only after you <strong>assign</strong> it to that session with an invigilator capacity — this is the maximum number of invigilators, not student seats.</p>
           <p>You can raise or lower a room's capacity for a session at any time, but never below the number of people already allocated there. Deactivating a room (or a room's link to one session) stops new allocations but keeps existing ones in place — use this instead of removing a room once it has been used.</p>
+          <p>If a session needs many rooms at once, use <strong>Import rooms</strong> on the Rooms page instead of adding them one by one. Upload a CSV or XLSX with the columns Room Code, Building, Floor and Capacity: it creates any new rooms, updates building/floor on existing ones, and assigns every row to the working session with the given capacity — all validated first, so a bad file changes nothing.</p>
         </Section>
 
         <Section title="3. Schedule — who is on duty">
@@ -53,6 +54,7 @@ export default function Help() {
           <p><strong>Branding</strong> controls the institution name, exam-cell name, application title and logo shown on the public check-in page and on allocation slips. Changes apply immediately for every employee.</p>
           <p><strong>Permanent QR code</strong> — enter the site's live https:// address once it is deployed, then print the generated code once. It never needs to be reprinted, even as exam dates and sessions change, because it only encodes the web address, nothing else.</p>
           <p><strong>Maintenance</strong> clears expired throttle records and abandoned import staging data — run it after each exam period. The audit log is never affected by maintenance.</p>
+          <p><strong>Backup &amp; reset all data</strong> (Danger zone) is for starting a completely new exam period in a clean system. It downloads every session, room, schedule entry, allocation, verification flag and audit-log entry to this computer as a zip file, then permanently deletes all of it. Your admin login, branding and these settings are kept, so you can sign in immediately afterward. It requires your password and typing "RESET" to confirm, and <strong>cannot be undone</strong> — keep the downloaded zip somewhere safe.</p>
           <p><strong>Replay guide</strong> resets the on-screen walkthrough so it shows again the next time you open each admin page.</p>
         </Section>
 
@@ -74,7 +76,7 @@ export default function Help() {
           <ul className="list-disc space-y-1 pl-5">
             <li>Export the audit log for the record, then run Settings → Run maintenance now.</li>
             <li>Deactivate sessions and any temporary administrator accounts that are no longer needed.</li>
-            <li>Remove rehearsal or test data — it should never remain in a production project.</li>
+            <li>Starting fresh for the next period? Use Settings → Backup &amp; reset all data instead of removing rehearsal or test data by hand — it backs everything up first.</li>
           </ul>
         </Section>
       </div>

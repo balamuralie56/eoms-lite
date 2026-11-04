@@ -1,12 +1,15 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import QRCode from 'qrcode';
-import { Download, HelpCircle, QrCode, Save, Trash2, Wrench } from 'lucide-react';
+import { Download, HelpCircle, QrCode, Save, ShieldAlert, Trash2, Wrench } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useConfig } from '../../context/ConfigContext';
+import { useAuth } from '../../context/AuthContext';
+import { getSupabase } from '../../lib/supabase';
 import { ErrorBox, errText, useAdminQuery } from '../../lib/adminHooks';
-import { Alert, Button, Card, ConfirmDialog, Field, Input, PageHeader, Skeleton, Textarea, useToast } from '../../components/ui';
+import { Alert, Button, Card, ConfirmDialog, Field, Input, PageHeader, Skeleton, Spinner, Textarea, useToast } from '../../components/ui';
 import type { AdminSettings } from '../../lib/types';
 import { downloadBlob } from '../../lib/csv';
+import { buildZip, type ZipEntry } from '../../lib/zip';
 import { Tour } from '../../components/tour/Tour';
 import { useAutoTour } from '../../components/tour/useAutoTour';
 import { TOUR_STEPS } from '../../lib/tourSteps';
@@ -172,6 +175,102 @@ function Operations() {
   );
 }
 
+const COUNT_LABELS: Record<string, string> = {
+  sessions: 'examination sessions', rooms: 'rooms', session_rooms: 'room-session assignments', schedule: 'schedule entries',
+  allocations: 'allocations', flags: 'verification flags', authorizations: 'late/re-entry authorizations',
+  import_batches: 'import batches', import_rows: 'staged import rows', check_attempts: 'throttle records', audit_log: 'audit log entries',
+};
+
+function describeCounts(counts: Record<string, number>): string {
+  const parts = Object.entries(counts).filter(([, v]) => v > 0).map(([k, v]) => `${v} ${COUNT_LABELS[k] ?? k}`);
+  return parts.length ? parts.join(', ') : 'nothing — the system is already empty';
+}
+
+function DangerZone() {
+  const { push } = useToast();
+  const { email } = useAuth();
+  const [open, setOpen] = useState(false);
+  const [counts, setCounts] = useState<Record<string, number> | null>(null);
+  const [loadingCounts, setLoadingCounts] = useState(false);
+  const [password, setPassword] = useState('');
+  const [typed, setTyped] = useState('');
+
+  const startReset = async () => {
+    setOpen(true); setCounts(null); setPassword(''); setTyped(''); setLoadingCounts(true);
+    try {
+      const r = await api.resetAllData(false);
+      setCounts(r.would_delete ?? null);
+    } finally { setLoadingCounts(false); }
+  };
+
+  const confirm = async () => {
+    if (!email) throw new Error('No signed-in admin email was found. Please sign out and in again.');
+    const { error } = await getSupabase().auth.signInWithPassword({ email, password });
+    if (error) throw new Error('Incorrect password.');
+
+    const exported = await api.exportAllData();
+    const { exported_at, exported_by, ...tables } = exported;
+    const files: ZipEntry[] = Object.entries(tables).map(([k, v]) => ({
+      name: `${k}.json`, data: new TextEncoder().encode(JSON.stringify(v, null, 2)),
+    }));
+    files.push({
+      name: 'README.txt',
+      data: new TextEncoder().encode(
+        `EOMS Lite — full data backup\nExported at: ${exported_at}\nExported by admin: ${exported_by}\n\n`
+        + 'This backup was taken immediately before a full data reset. Each .json file is one database table '
+        + '(sessions, rooms, schedule, allocations, verification flags, audit log, and so on). Keep it somewhere safe.\n',
+      ),
+    });
+    downloadBlob(buildZip(files), `eoms-backup-${new Date().toISOString().slice(0, 10)}.zip`);
+
+    const res = await api.resetAllData(true);
+    push('success', `Backup downloaded. Reset complete — removed ${describeCounts(res.deleted ?? {})}.`);
+  };
+
+  return (
+    <Card title="Danger zone">
+      <p className="text-sm text-slate-700">
+        Downloads a full backup — every session, room, schedule entry, allocation, verification flag and audit-log
+        entry — as a zip file to this computer, then permanently deletes all of it so the system is ready to run
+        clean for the next exam period. <strong>Admin logins and branding/settings are kept</strong>, so you can log
+        in again right away.
+      </p>
+      <Button variant="danger" className="mt-2" onClick={startReset} data-testid="open-data-reset">
+        <ShieldAlert className="h-4 w-4" aria-hidden />Backup &amp; reset all data
+      </Button>
+      {open && (
+        <ConfirmDialog title="Download backup and reset all data?" tone="danger" confirmLabel="Download backup &amp; reset"
+          onClose={() => setOpen(false)} confirmDisabled={loadingCounts || !password || typed.trim().toUpperCase() !== 'RESET'}
+          onConfirm={confirm}
+          extra={
+            <div className="space-y-3">
+              {loadingCounts
+                ? <Spinner label="Checking current data" />
+                : counts && (
+                  <Alert tone="warning">
+                    This will permanently delete: <strong>{describeCounts(counts)}</strong>.
+                  </Alert>
+                )}
+              <Field label="Your password" htmlFor="reset-pw" hint="Confirms it's really you, not just an unlocked browser.">
+                <Input id="reset-pw" type="password" autoComplete="current-password" value={password}
+                  onChange={(e) => setPassword(e.target.value)} data-testid="reset-password" />
+              </Field>
+              <Field label='Type RESET to confirm' htmlFor="reset-typed">
+                <Input id="reset-typed" value={typed} onChange={(e) => setTyped(e.target.value)} data-testid="reset-typed" />
+              </Field>
+            </div>
+          }>
+          <p>
+            The backup zip downloads first. Once it finishes, every session, room, schedule entry, allocation,
+            flag and audit-log entry is permanently deleted from the live database. <strong>This cannot be undone</strong> —
+            keep the downloaded zip somewhere safe.
+          </p>
+        </ConfirmDialog>
+      )}
+    </Card>
+  );
+}
+
 export default function Settings() {
   const { push } = useToast();
   const tour = useAutoTour('settings', TOUR_STEPS.settings);
@@ -190,6 +289,7 @@ export default function Settings() {
         <Branding />
         <QrTool />
         <Operations />
+        <DangerZone />
       </div>
       {tour.running && <Tour steps={tour.steps} onDone={tour.finish} onSkip={tour.finish} />}
     </>

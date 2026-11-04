@@ -1,5 +1,5 @@
 import { useMemo, useState, type FormEvent } from 'react';
-import { Pencil, Plus, Power, Search, Trash2 } from 'lucide-react';
+import { Pencil, Plus, Power, Search, Trash2, Upload } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useSessions } from '../../context/SessionContext';
 import { ErrorBox, errText, useAdminQuery } from '../../lib/adminHooks';
@@ -10,6 +10,7 @@ import { roomStatusBadge } from './Dashboard';
 import { Tour } from '../../components/tour/Tour';
 import { useAutoTour } from '../../components/tour/useAutoTour';
 import { TOUR_STEPS } from '../../lib/tourSteps';
+import RoomImportWizard from '../../components/RoomImportWizard';
 
 function CapacityDialog({ row, onClose, onDone }: { row: RoomMonitorRow; onClose: () => void; onDone: () => void }) {
   const [cap, setCap] = useState(String(row.capacity));
@@ -115,6 +116,7 @@ export default function Rooms() {
   const [linkToggle, setLinkToggle] = useState<RoomMonitorRow | null>(null);
   const [remove, setRemove] = useState<RoomMonitorRow | null>(null);
   const [roomToggle, setRoomToggle] = useState<RoomRow | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
   const tour = useAutoTour('rooms', TOUR_STEPS.rooms);
 
   const reload = () => { monitor.reload(); all.reload(); };
@@ -161,7 +163,10 @@ export default function Rooms() {
         actions={<Button onClick={() => setRoomForm({})} data-testid="new-room"><Plus className="h-4 w-4" aria-hidden />New room</Button>} />
 
       <Card className="mb-6" title={selected ? `Rooms in ${formatExamDate(selected.exam_date)} · ${selected.session_label}` : 'Rooms in the selected session'}
-        actions={<Button size="sm" disabled={!selectedId} onClick={() => setAssign(true)} data-testid="assign-room"><Plus className="h-4 w-4" aria-hidden />Assign room</Button>}>
+        actions={<div className="flex gap-2">
+          <Button variant="secondary" size="sm" disabled={!selectedId} onClick={() => setImportOpen(true)} data-testid="import-rooms"><Upload className="h-4 w-4" aria-hidden />Import rooms</Button>
+          <Button size="sm" disabled={!selectedId} onClick={() => setAssign(true)} data-testid="assign-room"><Plus className="h-4 w-4" aria-hidden />Assign room</Button>
+        </div>}>
         {!selectedId ? <EmptyState title="No session selected">Create a session first, then assign rooms to it.</EmptyState> : (
           <>
             <div className="mb-3 flex flex-wrap gap-2">
@@ -185,6 +190,10 @@ export default function Rooms() {
           empty={<EmptyState title="No rooms yet">Create rooms, then assign them to sessions.</EmptyState>} />
       </Card>
 
+      {importOpen && selectedId && selected && (
+        <RoomImportWizard sessionId={selectedId} sessionLabel={`${formatExamDate(selected.exam_date)} · ${selected.session_label}`}
+          onClose={() => setImportOpen(false)} onChanged={reload} />
+      )}
       {cap && <CapacityDialog row={cap} onClose={() => setCap(null)} onDone={reload} />}
       {assign && selectedId && <AssignDialog sessionId={selectedId} rooms={all.data ?? []} assignedIds={assignedIds} onClose={() => setAssign(false)} onDone={reload} />}
       {roomForm && <RoomForm existing={roomForm.existing} onClose={() => setRoomForm(null)} onDone={reload} />}

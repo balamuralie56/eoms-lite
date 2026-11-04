@@ -20,6 +20,7 @@ export const TOUR_STEPS: Record<string, TourStep[]> = {
   rooms: [
     NAV_STEP,
     { selector: '[data-testid="new-room"]', title: 'Add a room', body: 'Give it a code and, optionally, a building and floor. Rooms are shared across every session.' },
+    { selector: '[data-testid="import-rooms"]', title: 'Import many rooms at once', body: 'Have 50+ rooms for one session? Upload a CSV or XLSX with Room Code, Building, Floor and Capacity — it creates the rooms and assigns them to the working session in one go.' },
     { selector: '[data-testid="assign-room"]', title: 'Assign to this session', body: 'A room only becomes usable for check-in once it is assigned to the working session with an invigilator capacity.' },
     { selector: 'button[aria-label^="Edit capacity"]', title: 'Capacity', body: 'Adjust capacity any time — it can never be set below the number of people already allocated to that room.' },
   ],
@@ -56,6 +57,7 @@ export const TOUR_STEPS: Record<string, TourStep[]> = {
     { selector: '#b-inst', title: 'Branding', body: 'Institution name, exam-cell name and the title shown on the check-in page. Changes apply immediately for everyone.' },
     { selector: '#qr-url', title: 'Permanent QR code', body: 'Enter your live https:// address once you deploy, then print the code once — it never needs to change, even as sessions change.' },
     { selector: '[data-testid="run-maintenance"]', title: 'Maintenance', body: 'Run this after each exam period to clear old throttle records and abandoned imports. The audit log itself is never touched.' },
+    { selector: '[data-testid="open-data-reset"]', title: 'Backup & reset all data', body: 'Starting a new exam period? This downloads every session, room, schedule entry, allocation and audit-log entry as a zip, then wipes them for a clean run. Your admin login and branding are kept.' },
     { selector: '[data-testid="replay-guide"]', title: 'Replay this guide', body: 'Click here any time to see the walkthrough again on every admin page.' },
   ],
 };

@@ -148,4 +148,20 @@ export const api = {
     }),
   runMaintenance: () => callRpc<Record<string, number | boolean>>('admin_run_maintenance'),
   debugHeaders: () => callRpc<{ headers: Record<string, string>; client_ip_hash_used: string | null }>('admin_debug_request_headers'),
+
+  // ---- data export / reset ----
+  exportAllData: () => callRpc<Record<string, unknown>>('admin_export_all_data'),
+  resetAllData: (confirm: boolean) =>
+    callRpc<{ ok: true; dry_run: boolean; would_delete?: Record<string, number>; deleted?: Record<string, number> }>(
+      'admin_reset_all_data', { p_confirm: confirm },
+    ),
+
+  // ---- bulk room import ----
+  importRooms: (sessionId: string, rows: Array<{ room_code: string; building?: string; floor?: string; capacity: string }>, confirm: boolean) =>
+    callRpc<{
+      ok: true; rows?: number; valid?: number; invalid?: number;
+      errors?: Array<{ row: number; room_code: string; errors: string[] }>;
+      would_create_rooms?: number; would_update_rooms?: number; would_assign?: number; would_update_capacity?: number;
+      created_rooms?: number; updated_rooms?: number; assigned?: number; updated_capacity?: number; unchanged?: number;
+    }>('admin_import_rooms', { p_session_id: sessionId, p_rows: rows, p_confirm: confirm }),
 };
