@@ -97,7 +97,7 @@ export default function Dashboard() {
                 columns={[
                   { key: 'who', header: 'Employee', cell: (r) => <><span className="font-semibold">{r.employee_name ?? r.employee_id}</span><span className="block text-xs text-slate-600">{r.employee_id}</span></> },
                   { key: 'room', header: 'Room', cell: (r) => <>{r.room_code}{r.released_at && <Badge tone="amber">Released</Badge>}</> },
-                  { key: 'at', header: 'Time', cell: (r) => <span className="text-xs">{formatIst(r.allocated_at)}</span> },
+                  { key: 'at', header: 'Time', cell: (r) => <span className="whitespace-nowrap text-xs">{formatIst(r.allocated_at)}</span> },
                 ]} />
             </Card>
           </div>

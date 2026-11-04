@@ -103,3 +103,39 @@ superuser can disable the immutability triggers; both are platform-owner powers 
 
 Phase 2A notes: every sensitive change records the *before* value; confirmations (`p_confirm`) and reasons are stored in
 `after`. Import staging chunks (`admin_import_add_rows`) are not audited individually (volume); the batch is.
+
+## Product phase additions (migrations 0008-0010, frontend)
+
+**Client IP for the throttle.** The left-most `X-Forwarded-For` entry is attacker-controlled and is **no longer trusted** (a test
+shows a forged prefix does not dodge the limit). The key is `cf-connecting-ip` if present, else the **right-most** entry. Whether Supabase
+supplies such a header is **unverified**; `Settings -> Inspect request headers` exists to check it on the real project. Without a client IP the
+throttle is inactive (integrity guarantees are unaffected).
+
+**Public surface is exactly three functions**: `checkin`, `get_checkin_status`, `get_public_config` (branding only). Enforced by a catalog test.
+40 `admin_*` functions are `authenticated`-only and re-verify the active admin inside; 12 of them are read-only (`STABLE`) reports/lists,
+verified to write nothing. Search inputs are bound parameters with `ILIKE ... ESCAPE` (no dynamic SQL; `%`/`_` are literal; an injection string returns no rows).
+
+**Branding input**: logo is stored as a data URL, PNG/JPEG/WebP only, <= 200,000 characters (client limit 150 KB). **SVG is refused** (script risk).
+The audit log records only the logo's size, never the image.
+
+**Browser hardening** (`web/public/_headers`, applied to the E2E build): CSP `default-src 'self'` with `script-src 'self'`, `connect-src` limited to the site and
+`*.supabase.co`, `frame-ancestors 'none'`, `X-Content-Type-Options`, `Referrer-Policy: no-referrer`, HSTS, no camera/mic/geolocation. React escapes all
+rendered text (no `dangerouslySetInnerHTML` anywhere). Employee data is never written to localStorage/sessionStorage (tested); only the admin's chosen
+working-session id is stored, as a convenience.
+
+**Exports**: text cells starting with `=`, `+`, `-`, `@` (also after spaces/tab/CR) get a leading apostrophe in CSV and XLSX (tested on downloaded files).
+Exports are produced from the admin RPCs, so an export contains only what that admin may already read.
+
+**Files**: uploads are checked by extension, size, and magic bytes (a fake `.xlsx` or binary `.csv` is refused) and parsed in a Web Worker. XLSX parsing uses
+`read-excel-file` (the widely used `xlsx` package on npm is unmaintained and has published prototype-pollution/ReDoS advisories, so it was not used).
+`npm audit` reported 0 vulnerabilities at install time.
+
+**Impersonation**: unchanged and unsolved by design; see the section above. The slip says on its face that it is an editable convenience copy, and the
+public page tells employees the ID does not prove identity. **A PNG slip is not tamper-proof**; no verification code is implemented, because a code
+that is not checked against server data would be security theatre. Administrator-assisted verification (flags, Release, Re-entry) is the control.
+
+**Retention** (policy values in `app_settings`; audit records are never deleted): throttle records 48 h, unfinished import staging 7 days, staged rows
+of finished imports 90 days. Run by `eoms_private.run_maintenance()` (pg_cron or the admin button).
+
+**Known gaps**: no Cloudflare/Turnstile protection (the browser talks directly to Supabase); no automated accessibility audit; no penetration test; the
+real Supabase gateway behaviour is untested.

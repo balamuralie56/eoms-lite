@@ -89,3 +89,23 @@ yet still records the failure. Business rejections are JSON results (so state an
 A first version of validation took ~32 s for 5000 rows because an UPDATE joined to an aggregate over the same table was
 re-evaluated per row. Rewritten as row-wise updates plus a materialised window-function pass joined back by primary key
 (~0.3 s). Measured locally; to be re-measured on Supabase.
+## ADR-21 Test the browser against the real Data API engine, with an honest stand-in for auth
+No Supabase CLI/GoTrue was available. A Docker PostgREST in front of the real migrations exercises the same RPC parameter shapes, status codes, JWT checks and
+request headers the app will meet, and revealed behaviour that mocks hide (missing parameter -> 404 `PGRST202`; anon key must be a JWT; expiry leeway). Auth is a
+small stand-in and is labelled as such everywhere; Supabase Auth itself remains untested.
+
+## ADR-22 Serve the E2E build with the real `_headers` and `_redirects`
+So the CSP and SPA fallback are tested, not assumed. This caught a real CSP violation (QR download via `fetch(data:)`).
+
+## ADR-23 Branding is data, stored in the database
+Institution name, cell name, title, contact text and logo live in `app_branding` and reach the public page through one anonymous function, so nothing
+institution-specific is hard-coded. Logos are small raster images only (SVG refused).
+
+## ADR-24 No tamper-proof slip claim
+A client-rendered PNG is editable. We state that on the slip and in the docs rather than add an unverifiable code. Verification is administrator-assisted.
+
+## ADR-25 XLSX via `read-excel-file`/`write-excel-file`, not `xlsx`
+The npm `xlsx` package is unmaintained with known advisories; the chosen libraries are maintained and sufficient (read first sheet, write one sheet).
+
+## ADR-26 Retention is explicit and never touches audit
+Throttle rows, abandoned staging and old staged rows are purged on a schedule/by button; audit records are append-only and permanent.

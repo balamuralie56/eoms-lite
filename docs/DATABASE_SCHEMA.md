@@ -76,3 +76,15 @@ Room codes written through `admin_create_room` / `admin_update_room` are stored 
 | `0007_admin_security.sql` | RLS and grants for the Phase 2A objects |
 
 Apply in order. Phase 1 files are unchanged by Phase 2A. `tests/db/00_supabase_shim.sql` is test-only and must never be deployed.
+
+## Product phase additions (migrations 0008-0010)
+
+* `app_branding` (single row): institution name, exam-cell name, app title, `logo_data_url` (PNG/JPEG/WebP data URL, constrained), contact instructions,
+  support info, `default_items_per_page`. Public read only through `get_public_config()`; admin write only through `admin_update_settings()` (audited).
+* `app_settings`: `retention_attempts_hours` (48), `retention_staging_days` (7), `retention_committed_rows_days` (90).
+* `eoms_private.client_ip_hash()` now ignores the left-most `X-Forwarded-For` entry (see SECURITY_MODEL).
+* Read RPCs (all `STABLE`, admin-only): `admin_overview`, `admin_room_monitor`, `admin_list_sessions`, `admin_list_rooms`, `admin_list_schedule`,
+  `admin_list_allocations`, `admin_allocation_history`, `admin_list_flags`, `admin_list_authorizations`, `admin_list_audit`, `admin_list_imports`,
+  `admin_report` (9 reports: session-, room-, employee-wise allocations, unallocated, full rooms, late check-ins, verification exceptions, corrections/releases, imports).
+* Maintenance: `eoms_private.run_maintenance()` (owner / pg_cron), `admin_run_maintenance()`; diagnostic `admin_debug_request_headers()` (never echoes credentials).
+* Migration files 0008 settings/maintenance, 0009 read functions, 0010 grants/RLS for them.

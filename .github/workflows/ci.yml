@@ -1,0 +1,37 @@
+# CI for EOMS Lite. NOTE: this workflow has not been executed on GitHub yet; the same commands pass locally.
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  database:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env: { POSTGRES_PASSWORD: postgres }
+        ports: ['54329:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - run: npm test            # PostgreSQL tests: schema, allocation, concurrency, security, admin RPCs
+
+  web:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: web } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm, cache-dependency-path: web/package-lock.json }
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test            # unit + component tests (mocked API)
+      - run: npm run build       # production build without any secrets
+      # Browser tests need the Docker stack (PostgREST) and Chrome; run them locally with `npm run stack:up` then `npm run e2e`.

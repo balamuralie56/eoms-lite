@@ -14,12 +14,12 @@ not assumed here.
 
 ## 2. Deploy the migrations
 
-Apply all seven in order. Do **not** apply `tests/db/00_supabase_shim.sql` (test-only).
-A project that already has 0001-0003 only needs 0004-0007.
+Apply all ten (0001-0010) in order. Do **not** apply `tests/db/00_supabase_shim.sql` (test-only).
+A project that already has an earlier set only needs the later files.
 
 **Option A: SQL editor (simplest).** Paste and run, in order: `0001_schema.sql`, `0002_functions.sql`,
 `0003_security.sql`, `0004_admin_schema.sql`, `0005_admin_config_functions.sql`, `0006_import_functions.sql`,
-`0007_admin_security.sql` (all under `supabase/migrations/`). Run each as one script and stop at the first error.
+`0007_admin_security.sql`, `0008_settings_maintenance.sql`, `0009_admin_read_functions.sql`, `0010_product_security.sql` (all under `supabase/migrations/`). Run each as one script and stop at the first error.
 
 **Option B: Supabase CLI** (not installed here; install per Supabase docs):
 

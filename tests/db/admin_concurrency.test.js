@@ -37,7 +37,8 @@ async function assertWaitsForSessionLock(w, sessionId, label, fn) {
 test('session configuration shares the allocation lock: updates, (de)activation wait for in-flight allocation', async () => {
   await withWorld(async (w) => {
     const adm = await w.adminClient();
-    const s = await w.session({ opens: -30, closes: 30 });
+    // today's IST date, not the harness's fixed one: admin_update_session requires the window to include the exam date
+    const s = await w.session({ date: await w.istToday(), opens: -30, closes: 30 });
     await w.rooms(s, [3]);
     const closes = await w.ist(90);
     const u = await assertWaitsForSessionLock(w, s.id, 'admin_update_session', () => w.rpc(adm, 'admin_update_session', s.id, null, null, null, closes));
