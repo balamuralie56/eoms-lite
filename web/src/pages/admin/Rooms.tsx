@@ -171,8 +171,8 @@ export default function Rooms() {
           <>
             <div className="mb-3 flex flex-wrap gap-2">
               <div className="relative min-w-48 flex-1"><Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-500" aria-hidden />
-                <Input aria-label="Search session rooms" placeholder="Search rooms" className="pl-9" value={q} onChange={(e) => setQ(e.target.value)} /></div>
-              <Select aria-label="Filter session rooms by status" className="w-40" value={status} onChange={(e) => setStatus(e.target.value)}>
+                <Input id="rooms-session-search" name="rooms-session-search" aria-label="Search session rooms" placeholder="Search rooms" className="pl-9" value={q} onChange={(e) => setQ(e.target.value)} /></div>
+              <Select id="rooms-session-status" name="rooms-session-status" aria-label="Filter session rooms by status" className="w-40" value={status} onChange={(e) => setStatus(e.target.value)}>
                 <option value="">All statuses</option><option value="available">Available</option><option value="full">Full</option><option value="inactive">Inactive</option></Select>
             </div>
             <ErrorBox error={monitor.error} onRetry={monitor.reload} />
@@ -184,7 +184,7 @@ export default function Rooms() {
 
       <Card title="All rooms">
         <div className="relative mb-3 max-w-sm"><Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-500" aria-hidden />
-          <Input aria-label="Search all rooms" placeholder="Search rooms" className="pl-9" value={rq} onChange={(e) => setRq(e.target.value)} /></div>
+          <Input id="rooms-all-search" name="rooms-all-search" aria-label="Search all rooms" placeholder="Search rooms" className="pl-9" value={rq} onChange={(e) => setRq(e.target.value)} /></div>
         <ErrorBox error={all.error} onRetry={all.reload} />
         <DataTable caption="All rooms" columns={roomCols} rows={allFiltered} rowKey={(r) => r.id} loading={all.loading}
           empty={<EmptyState title="No rooms yet">Create rooms, then assign them to sessions.</EmptyState>} />

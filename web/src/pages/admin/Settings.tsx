@@ -1,6 +1,6 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import QRCode from 'qrcode';
-import { Download, HelpCircle, QrCode, Save, ShieldAlert, Trash2, Wrench } from 'lucide-react';
+import { Download, HelpCircle, LogOut, QrCode, Save, ShieldAlert, Trash2, Wrench } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useConfig } from '../../context/ConfigContext';
 import { useAuth } from '../../context/AuthContext';
@@ -9,11 +9,11 @@ import { ErrorBox, errText, useAdminQuery } from '../../lib/adminHooks';
 import { Alert, Button, Card, ConfirmDialog, Field, Input, PageHeader, Skeleton, Spinner, Textarea, useToast } from '../../components/ui';
 import type { AdminSettings } from '../../lib/types';
 import { downloadBlob } from '../../lib/csv';
+import { formatIst } from '../../lib/time';
 import { buildZip, type ZipEntry } from '../../lib/zip';
 import { Tour } from '../../components/tour/Tour';
 import { useAutoTour } from '../../components/tour/useAutoTour';
 import { TOUR_STEPS } from '../../lib/tourSteps';
-import { resetAllTours } from '../../lib/tourStore';
 
 const MAX_LOGO_BYTES = 150 * 1024;
 const LOGO_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
@@ -175,6 +175,46 @@ function Operations() {
   );
 }
 
+function SecureZone() {
+  const { email } = useAuth();
+  const { push } = useToast();
+  const [info, setInfo] = useState<{ lastSignIn: string | null; createdAt: string | null } | undefined>();
+  const [confirmAll, setConfirmAll] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    void getSupabase().auth.getUser().then(({ data }) => {
+      if (!alive) return;
+      setInfo({ lastSignIn: data.user?.last_sign_in_at ?? null, createdAt: data.user?.created_at ?? null });
+    });
+    return () => { alive = false; };
+  }, []);
+
+  return (
+    <Card title="Secure zone">
+      <p className="text-sm text-slate-700">Session and security information for your own admin login (<strong>{email}</strong>).</p>
+      <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
+        <div><dt className="text-xs font-semibold uppercase tracking-wide text-slate-600">Last signed in</dt><dd className="mt-0.5">{info === undefined ? '…' : info.lastSignIn ? formatIst(info.lastSignIn) : 'Unknown'}</dd></div>
+        <div><dt className="text-xs font-semibold uppercase tracking-wide text-slate-600">Admin account created</dt><dd className="mt-0.5">{info === undefined ? '…' : info.createdAt ? formatIst(info.createdAt) : 'Unknown'}</dd></div>
+      </dl>
+      <p className="mt-4 text-sm text-slate-700">If you think your account may be signed in somewhere you do not recognize, end every active session at once.</p>
+      <Button variant="secondary" className="mt-2" onClick={() => setConfirmAll(true)} data-testid="sign-out-everywhere">
+        <LogOut className="h-4 w-4" aria-hidden />Sign out of all devices
+      </Button>
+      {confirmAll && (
+        <ConfirmDialog title="Sign out of all devices?" confirmLabel="Sign out everywhere" onClose={() => setConfirmAll(false)}
+          onConfirm={async () => {
+            const { error } = await getSupabase().auth.signOut({ scope: 'global' });
+            if (error) throw new Error(error.message);
+            push('info', 'Signed out of all devices, including this one.');
+          }}>
+          <p>Ends every active session for <strong>{email}</strong>, including this browser. You will need to sign in again here too.</p>
+        </ConfirmDialog>
+      )}
+    </Card>
+  );
+}
+
 const COUNT_LABELS: Record<string, string> = {
   sessions: 'examination sessions', rooms: 'rooms', session_rooms: 'room-session assignments', schedule: 'schedule entries',
   allocations: 'allocations', flags: 'verification flags', authorizations: 'late/re-entry authorizations',
@@ -275,20 +315,20 @@ export default function Settings() {
   const { push } = useToast();
   const tour = useAutoTour('settings', TOUR_STEPS.settings);
 
-  const replayGuide = () => {
-    resetAllTours();
+  const showGuide = () => {
     tour.replay();
-    push('success', 'Guide reset — it will show again as you open each admin page.');
+    push('success', 'Showing the guide for this page.');
   };
 
   return (
     <>
       <PageHeader title="Settings" subtitle="Branding shown to employees, the permanent QR code, and housekeeping."
-        actions={<Button variant="secondary" size="sm" onClick={replayGuide} data-testid="replay-guide"><HelpCircle className="h-4 w-4" aria-hidden />Replay guide</Button>} />
+        actions={<Button variant="secondary" size="sm" onClick={showGuide} data-testid="replay-guide"><HelpCircle className="h-4 w-4" aria-hidden />Show guide</Button>} />
       <div className="space-y-5">
         <Branding />
         <QrTool />
         <Operations />
+        <SecureZone />
         <DangerZone />
       </div>
       {tour.running && <Tour steps={tour.steps} onDone={tour.finish} onSkip={tour.finish} />}

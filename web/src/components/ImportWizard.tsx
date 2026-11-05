@@ -189,7 +189,7 @@ export default function ImportWizard({ onClose, onChanged }: { onClose: () => vo
           {commitMsg && <Alert tone="warning">{commitMsg}</Alert>}
 
           <Card title="Rows needing attention" actions={
-            <Select aria-label="Show rows" className="w-52 !py-1.5" value={problemFilter} onChange={async (e) => { setProblemFilter(e.target.value); setOffset(0); if (batchId) await loadProblems(batchId, e.target.value, 0); }}>
+            <Select id="import-problem-filter" name="import-problem-filter" aria-label="Show rows" className="w-52 !py-1.5" value={problemFilter} onChange={async (e) => { setProblemFilter(e.target.value); setOffset(0); if (batchId) await loadProblems(batchId, e.target.value, 0); }}>
               <option value="problems">All problems</option><option value="invalid">Invalid</option><option value="conflict">Conflicts</option>
               <option value="duplicate_in_batch">Duplicates in file</option><option value="exact_duplicate">Already scheduled</option><option value="valid">Valid rows</option>
             </Select>}>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { History, Repeat, Search, UserMinus, UserPlus } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useSessions } from '../../context/SessionContext';
-import { ErrorBox, useAdminQuery } from '../../lib/adminHooks';
+import { ErrorBox, useAdminQuery, usePageLimit } from '../../lib/adminHooks';
 import { useDebounced } from '../../lib/hooks';
 import { Alert, Badge, Button, Card, ConfirmDialog, DataTable, EmptyState, Field, Input, Modal, PageHeader, Pagination, Select, useToast, type Column } from '../../components/ui';
 import { formatExamDate, formatIst } from '../../lib/time';
@@ -11,7 +11,6 @@ import { Tour } from '../../components/tour/Tour';
 import { useAutoTour } from '../../components/tour/useAutoTour';
 import { TOUR_STEPS } from '../../lib/tourSteps';
 
-const PAGE = 25;
 const SOURCE: Record<string, string> = { normal: 'Check-in', admin_late: 'Late (authorized)', admin_reentry: 'Re-entry (authorized)', admin_correction: 'Correction' };
 
 function HistoryDialog({ row, onClose }: { row: AllocationRow; onClose: () => void }) {
@@ -62,7 +61,7 @@ export default function Allocations() {
   const [state, setState] = useState('active');
   const [roomId, setRoomId] = useState('');
   const [search, setSearch] = useState('');
-  const [offset, setOffset] = useState(0);
+  const { limit, offset, setOffset, setLimit } = usePageLimit();
   const [hist, setHist] = useState<AllocationRow | null>(null);
   const [move, setMove] = useState<AllocationRow | null>(null);
   const [release, setRelease] = useState<AllocationRow | null>(null);
@@ -72,8 +71,8 @@ export default function Allocations() {
   const sessionId = scope === 'selected' ? selectedId : null;
   const rooms = useAdminQuery(() => (sessionId ? api.roomMonitor(sessionId) : Promise.resolve([] as RoomMonitorRow[])), [sessionId]);
   const q = useAdminQuery(
-    () => api.listAllocations({ sessionId, sessionRoomId: roomId || null, search: term, state, limit: PAGE, offset }),
-    [sessionId, roomId, term, state, offset], { pollMs: 15000 },
+    () => api.listAllocations({ sessionId, sessionRoomId: roomId || null, search: term, state, limit, offset }),
+    [sessionId, roomId, term, state, limit, offset], { pollMs: 15000 },
   );
   const sel = sessions.find((s) => s.id === selectedId);
 
@@ -102,18 +101,18 @@ export default function Allocations() {
       <Card>
         <div className="mb-3 grid gap-2 md:grid-cols-5">
           <div className="relative md:col-span-2"><Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-500" aria-hidden />
-            <Input aria-label="Search by employee ID or name" placeholder="Employee ID or name" className="pl-9" value={search} onChange={(e) => { setSearch(e.target.value); setOffset(0); }} data-testid="alloc-search" /></div>
-          <Select aria-label="Session scope" value={scope} onChange={(e) => { setScope(e.target.value as 'selected' | 'all'); setRoomId(''); setOffset(0); }}>
+            <Input id="alloc-search" name="alloc-search" aria-label="Search by employee ID or name" placeholder="Employee ID or name" className="pl-9" value={search} onChange={(e) => { setSearch(e.target.value); setOffset(0); }} data-testid="alloc-search" /></div>
+          <Select id="alloc-scope" name="alloc-scope" aria-label="Session scope" value={scope} onChange={(e) => { setScope(e.target.value as 'selected' | 'all'); setRoomId(''); setOffset(0); }}>
             <option value="selected">Working session{sel ? ` (${sel.exam_date} ${sel.session_label})` : ''}</option><option value="all">All sessions</option></Select>
-          <Select aria-label="Room filter" value={roomId} disabled={!sessionId} onChange={(e) => { setRoomId(e.target.value); setOffset(0); }}>
+          <Select id="alloc-room-filter" name="alloc-room-filter" aria-label="Room filter" value={roomId} disabled={!sessionId} onChange={(e) => { setRoomId(e.target.value); setOffset(0); }}>
             <option value="">All rooms</option>{(rooms.data ?? []).map((r) => <option key={r.session_room_id} value={r.session_room_id}>{r.room_code}</option>)}</Select>
-          <Select aria-label="State filter" value={state} onChange={(e) => { setState(e.target.value); setOffset(0); }}>
+          <Select id="alloc-state-filter" name="alloc-state-filter" aria-label="State filter" value={state} onChange={(e) => { setState(e.target.value); setOffset(0); }}>
             <option value="active">Active</option><option value="released">Released</option><option value="all">All</option></Select>
         </div>
         <ErrorBox error={q.error} onRetry={q.reload} />
         <DataTable caption="Allocations" columns={cols} rows={q.data?.rows} rowKey={(r) => r.id} loading={q.loading}
           empty={<EmptyState title="No allocations found">{term || roomId || state !== 'active' ? 'Try changing the filters.' : 'Allocations appear here as employees check in.'}</EmptyState>} />
-        {q.data && <Pagination total={q.data.total} offset={offset} limit={PAGE} onChange={setOffset} />}
+        {q.data && <Pagination total={q.data.total} offset={offset} limit={limit} onChange={setOffset} onLimitChange={setLimit} />}
       </Card>
 
       {hist && <HistoryDialog row={hist} onClose={() => setHist(null)} />}

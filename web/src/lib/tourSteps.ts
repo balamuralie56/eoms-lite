@@ -59,6 +59,6 @@ export const TOUR_STEPS: Record<string, TourStep[]> = {
     { selector: '#qr-url', title: 'Permanent QR code', body: 'Enter your live https:// address once you deploy, then print the code once — it never needs to change, even as sessions change.' },
     { selector: '[data-testid="run-maintenance"]', title: 'Maintenance', body: 'Run this after each exam period to clear old throttle records and abandoned imports. The audit log itself is never touched.' },
     { selector: '[data-testid="open-data-reset"]', title: 'Backup & reset all data', body: 'Starting a new exam period? This downloads every session, room, schedule entry, allocation and audit-log entry as a zip, then wipes them for a clean run. Your admin login and branding are kept.' },
-    { selector: '[data-testid="replay-guide"]', title: 'Replay this guide', body: 'Click here any time to see the walkthrough again on every admin page.' },
+    { selector: '[data-testid="replay-guide"]', title: 'Show guide', body: 'Click here any time to see this page’s walkthrough again, right now, on this page only.' },
   ],
 };

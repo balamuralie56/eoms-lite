@@ -81,9 +81,9 @@ export default function Dashboard() {
               <div className="mb-3 flex flex-wrap gap-2">
                 <div className="relative min-w-48 flex-1">
                   <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-500" aria-hidden />
-                  <Input aria-label="Search rooms" placeholder="Search rooms" className="pl-9" value={q} onChange={(e) => setQ(e.target.value)} />
+                  <Input id="dash-room-search" name="dash-room-search" aria-label="Search rooms" placeholder="Search rooms" className="pl-9" value={q} onChange={(e) => setQ(e.target.value)} />
                 </div>
-                <Select aria-label="Filter by status" value={status} onChange={(e) => setStatus(e.target.value)} className="w-40">
+                <Select id="dash-room-status" name="dash-room-status" aria-label="Filter by status" value={status} onChange={(e) => setStatus(e.target.value)} className="w-40">
                   <option value="">All statuses</option>
                   <option value="available">Available</option>
                   <option value="full">Full</option>

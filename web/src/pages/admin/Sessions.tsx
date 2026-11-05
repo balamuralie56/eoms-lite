@@ -98,7 +98,7 @@ export default function Sessions() {
           <Button onClick={() => setForm({})} data-testid="new-session"><Plus className="h-4 w-4" aria-hidden />New session</Button>
         </div>} />
       <Card title="Session history" actions={
-        <Select aria-label="Filter sessions" value={filter} onChange={(e) => setFilter(e.target.value)} className="w-40 !py-1.5">
+        <Select id="sessions-filter" name="sessions-filter" aria-label="Filter sessions" value={filter} onChange={(e) => setFilter(e.target.value)} className="w-40 !py-1.5">
           <option value="">All sessions</option><option value="OPEN">Open now</option><option value="UPCOMING">Upcoming</option>
           <option value="CLOSED">Closed</option><option value="active">Active</option><option value="inactive">Inactive</option>
         </Select>}>

@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Ban, CheckCircle2, Clock, Flag, Search, UserPlus } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useSessions } from '../../context/SessionContext';
-import { ErrorBox, errText, useAdminQuery } from '../../lib/adminHooks';
+import { ErrorBox, errText, useAdminQuery, usePageLimit } from '../../lib/adminHooks';
 import { useDebounced } from '../../lib/hooks';
 import { Alert, Badge, Button, Card, ConfirmDialog, DataTable, EmptyState, Field, Input, Modal, PageHeader, Pagination, Select, Tabs, Textarea, useToast, type Column } from '../../components/ui';
 import { formatExamDate, formatIst, sessionName } from '../../lib/time';
@@ -10,8 +10,6 @@ import type { AuthorizationRow, FlagRow } from '../../lib/types';
 import { Tour } from '../../components/tour/Tour';
 import { useAutoTour } from '../../components/tour/useAutoTour';
 import { TOUR_STEPS } from '../../lib/tourSteps';
-
-const PAGE = 25;
 
 function SessionSelect({ id, value, onChange }: { id: string; value: string; onChange: (v: string) => void }) {
   const { sessions } = useSessions();
@@ -54,12 +52,12 @@ function FlagDialog({ onClose, onDone }: { onClose: () => void; onDone: () => vo
 function Flags() {
   const [status, setStatus] = useState('open');
   const [search, setSearch] = useState('');
-  const [offset, setOffset] = useState(0);
+  const { limit, offset, setOffset, setLimit } = usePageLimit();
   const [adding, setAdding] = useState(false);
   const [resolve, setResolve] = useState<{ flag: FlagRow; decision: 'cleared' | 'blocked' } | null>(null);
   const { push } = useToast();
   const term = useDebounced(search);
-  const q = useAdminQuery(() => api.listFlags({ status: status || null, sessionId: null, search: term, limit: PAGE, offset }), [status, term, offset], { pollMs: 15000 });
+  const q = useAdminQuery(() => api.listFlags({ status: status || null, sessionId: null, search: term, limit, offset }), [status, term, limit, offset], { pollMs: 15000 });
   const tone = { pending: 'amber', blocked: 'red', cleared: 'green' } as const;
   const cols: Column<FlagRow>[] = [
     { key: 'emp', header: 'Employee', cell: (f) => <><span className="font-semibold">{f.employee_name ?? f.employee_id}</span><span className="block text-xs text-slate-600">{f.employee_id} · {f.department ?? ''}</span></> },
@@ -80,14 +78,14 @@ function Flags() {
     <Card title="Flagged employees" actions={<Button size="sm" onClick={() => setAdding(true)} data-testid="flag-employee"><Flag className="h-4 w-4" aria-hidden />Flag an employee</Button>}>
       <div className="mb-3 flex flex-wrap gap-2">
         <div className="relative min-w-52 flex-1"><Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-500" aria-hidden />
-          <Input aria-label="Search flags" placeholder="Employee ID or name" className="pl-9" value={search} onChange={(e) => { setSearch(e.target.value); setOffset(0); }} /></div>
-        <Select aria-label="Flag status" className="w-44" value={status} onChange={(e) => { setStatus(e.target.value); setOffset(0); }}>
+          <Input id="verification-search" name="verification-search" aria-label="Search flags" placeholder="Employee ID or name" className="pl-9" value={search} onChange={(e) => { setSearch(e.target.value); setOffset(0); }} /></div>
+        <Select id="verification-flag-status" name="verification-flag-status" aria-label="Flag status" className="w-44" value={status} onChange={(e) => { setStatus(e.target.value); setOffset(0); }}>
           <option value="open">Open (pending + blocked)</option><option value="pending">Pending</option><option value="blocked">Blocked</option><option value="cleared">Cleared</option><option value="">All</option></Select>
       </div>
       <ErrorBox error={q.error} onRetry={q.reload} />
       <DataTable caption="Flagged employees" columns={cols} rows={q.data?.rows} rowKey={(f) => f.id} loading={q.loading}
         empty={<EmptyState title="No flagged employees">Employees you flag for manual verification appear here.</EmptyState>} />
-      {q.data && <Pagination total={q.data.total} offset={offset} limit={PAGE} onChange={setOffset} />}
+      {q.data && <Pagination total={q.data.total} offset={offset} limit={limit} onChange={setOffset} onLimitChange={setLimit} />}
       {adding && <FlagDialog onClose={() => setAdding(false)} onDone={q.reload} />}
       {resolve && (
         <ConfirmDialog title={resolve.decision === 'cleared' ? `Clear flag for ${resolve.flag.employee_id}?` : `Block ${resolve.flag.employee_id}?`}
@@ -107,10 +105,10 @@ function Flags() {
 
 function AuthorizationList({ kind, reloadKey, onChanged }: { kind: 'late' | 'reentry'; reloadKey: number; onChanged: () => void }) {
   const [status, setStatus] = useState('');
-  const [offset, setOffset] = useState(0);
+  const { limit, offset, setOffset, setLimit } = usePageLimit();
   const [revoke, setRevoke] = useState<AuthorizationRow | null>(null);
   const { push } = useToast();
-  const q = useAdminQuery(() => api.listAuthorizations({ sessionId: null, kind, status: status || null, search: '', limit: PAGE, offset }), [kind, status, offset, reloadKey]);
+  const q = useAdminQuery(() => api.listAuthorizations({ sessionId: null, kind, status: status || null, search: '', limit, offset }), [kind, status, limit, offset, reloadKey]);
   const tone = { open: 'blue', consumed: 'green', revoked: 'neutral', expired: 'neutral' } as const;
   const cols: Column<AuthorizationRow>[] = [
     { key: 'emp', header: 'Employee', cell: (a) => <><span className="font-semibold">{a.employee_name ?? a.employee_id}</span><span className="block text-xs text-slate-600">{a.employee_id}</span></> },
@@ -122,11 +120,11 @@ function AuthorizationList({ kind, reloadKey, onChanged }: { kind: 'late' | 'ree
   ];
   return (
     <Card title={kind === 'late' ? 'Late check-in authorizations' : 'Re-entry authorizations'} actions={
-      <Select aria-label="Authorization status" className="w-44 !py-1.5" value={status} onChange={(e) => { setStatus(e.target.value); setOffset(0); }}>
+      <Select id={`${kind}-auth-status`} name={`${kind}-auth-status`} aria-label="Authorization status" className="w-44 !py-1.5" value={status} onChange={(e) => { setStatus(e.target.value); setOffset(0); }}>
         <option value="">All</option><option value="open">Waiting for employee</option><option value="consumed">Used</option><option value="revoked">Revoked</option><option value="expired">Expired</option></Select>}>
       <ErrorBox error={q.error} onRetry={q.reload} />
       <DataTable caption="Authorizations" columns={cols} rows={q.data?.rows} rowKey={(a) => a.id} loading={q.loading} empty={<EmptyState title="No authorizations yet" />} />
-      {q.data && <Pagination total={q.data.total} offset={offset} limit={PAGE} onChange={setOffset} />}
+      {q.data && <Pagination total={q.data.total} offset={offset} limit={limit} onChange={setOffset} onLimitChange={setLimit} />}
       {revoke && (
         <ConfirmDialog title="Revoke this authorization?" tone="danger" confirmLabel="Revoke" requireReason onClose={() => setRevoke(null)}
           onConfirm={async (reason) => { await api.revokeAuthorization(revoke.id, reason); push('success', 'Authorization revoked'); onChanged(); }}>

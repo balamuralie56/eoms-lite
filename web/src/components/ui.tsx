@@ -151,7 +151,7 @@ export function DataTable<T>({ columns, rows, rowKey, empty, loading, caption }:
   if (!rows && loading) return <Skeleton />;
   if (!rows || rows.length === 0) return <>{empty ?? <EmptyState title="Nothing to show" />}</>;
   return (
-    <div className={cx('overflow-x-auto rounded-lg border border-slate-200', loading && 'opacity-60 transition-opacity')}>
+    <div className={cx('table-scroll overflow-x-auto rounded-lg border border-slate-200', loading && 'opacity-60 transition-opacity')}>
       <table className="min-w-full divide-y divide-slate-200 text-sm">
         {caption && <caption className="sr-only">{caption}</caption>}
         <thead className="bg-slate-50">
@@ -169,15 +169,29 @@ export function DataTable<T>({ columns, rows, rowKey, empty, loading, caption }:
   );
 }
 
-export function Pagination({ total, offset, limit, onChange }: { total: number; offset: number; limit: number; onChange: (offset: number) => void }) {
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
+
+export function Pagination({ total, offset, limit, onChange, onLimitChange }:
+  { total: number; offset: number; limit: number; onChange: (offset: number) => void; onLimitChange?: (limit: number) => void }) {
+  const id = useId();
   const from = total === 0 ? 0 : offset + 1;
   const to = Math.min(offset + limit, total);
   return (
-    <nav aria-label="Pagination" className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm text-slate-700">
+    <nav aria-label="Pagination" className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-700">
       <p>Showing <span className="font-semibold">{from}–{to}</span> of <span className="font-semibold">{total}</span></p>
-      <div className="flex gap-2">
-        <Button variant="secondary" size="sm" disabled={offset <= 0} onClick={() => onChange(Math.max(0, offset - limit))} aria-label="Previous page"><ChevronLeft className="h-4 w-4" aria-hidden />Prev</Button>
-        <Button variant="secondary" size="sm" disabled={offset + limit >= total} onClick={() => onChange(offset + limit)} aria-label="Next page">Next<ChevronRight className="h-4 w-4" aria-hidden /></Button>
+      <div className="flex flex-wrap items-center gap-3">
+        {onLimitChange && (
+          <label className="flex items-center gap-2 text-xs text-slate-600">
+            Rows per page
+            <Select id={id} name={id} aria-label="Rows per page" className="!w-auto !py-1 !pr-7 text-xs" value={limit} onChange={(e) => onLimitChange(Number(e.target.value))}>
+              {PAGE_SIZE_OPTIONS.map((n) => <option key={n} value={n}>{n}</option>)}
+            </Select>
+          </label>
+        )}
+        <div className="flex gap-2">
+          <Button variant="secondary" size="sm" disabled={offset <= 0} onClick={() => onChange(Math.max(0, offset - limit))} aria-label="Previous page"><ChevronLeft className="h-4 w-4" aria-hidden />Prev</Button>
+          <Button variant="secondary" size="sm" disabled={offset + limit >= total} onClick={() => onChange(offset + limit)} aria-label="Next page">Next<ChevronRight className="h-4 w-4" aria-hidden /></Button>
+        </div>
       </div>
     </nav>
   );

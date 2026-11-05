@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Download, Search, Trash2, Upload } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useSessions } from '../../context/SessionContext';
-import { ErrorBox, errText, useAdminQuery } from '../../lib/adminHooks';
+import { ErrorBox, errText, useAdminQuery, usePageLimit } from '../../lib/adminHooks';
 import { useDebounced } from '../../lib/hooks';
 import ImportWizard from '../../components/ImportWizard';
 import { Badge, Button, Card, ConfirmDialog, DataTable, EmptyState, Input, PageHeader, Pagination, Select, Tabs, useToast, type Column } from '../../components/ui';
@@ -13,7 +13,6 @@ import { Tour } from '../../components/tour/Tour';
 import { useAutoTour } from '../../components/tour/useAutoTour';
 import { TOUR_STEPS } from '../../lib/tourSteps';
 
-const PAGE = 25;
 const STATE_BADGE = {
   allocated: <Badge tone="green">Allocated</Badge>, pending: <Badge tone="amber">Pending</Badge>,
   flagged: <Badge tone="red">Flagged</Badge>, released: <Badge tone="neutral">Released</Badge>,
@@ -25,7 +24,7 @@ function ScheduleList({ reloadKey, onChanged }: { reloadKey: number; onChanged: 
   const [scope, setScope] = useState<'selected' | 'all'>('selected');
   const [status, setStatus] = useState('');
   const [search, setSearch] = useState('');
-  const [offset, setOffset] = useState(0);
+  const { limit, offset, setOffset, setLimit } = usePageLimit();
   const [exporting, setExporting] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ScheduleRow | null>(null);
   const [clearInfo, setClearInfo] = useState<{ would_delete: number; would_skip: number } | null>(null);
@@ -33,8 +32,8 @@ function ScheduleList({ reloadKey, onChanged }: { reloadKey: number; onChanged: 
   const term = useDebounced(search);
   const sessionId = scope === 'selected' ? selectedId : null;
   const q = useAdminQuery(
-    () => api.listSchedule({ sessionId, search: term, status: status || null, limit: PAGE, offset }),
-    [sessionId, term, status, offset, reloadKey],
+    () => api.listSchedule({ sessionId, search: term, status: status || null, limit, offset }),
+    [sessionId, term, status, limit, offset, reloadKey],
   );
   const sel = sessions.find((s) => s.id === selectedId);
 
@@ -127,17 +126,17 @@ function ScheduleList({ reloadKey, onChanged }: { reloadKey: number; onChanged: 
       </>}>
         <div className="mb-3 grid gap-2 md:grid-cols-4">
           <div className="relative md:col-span-2"><Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-500" aria-hidden />
-            <Input aria-label="Search schedule" placeholder="Search ID, name or department" className="pl-9" value={search} onChange={(e) => { setSearch(e.target.value); setOffset(0); }} /></div>
-          <Select aria-label="Session scope" value={scope} onChange={(e) => { setScope(e.target.value as 'selected' | 'all'); setOffset(0); }}>
+            <Input id="schedule-search" name="schedule-search" aria-label="Search schedule" placeholder="Search ID, name or department" className="pl-9" value={search} onChange={(e) => { setSearch(e.target.value); setOffset(0); }} /></div>
+          <Select id="schedule-scope" name="schedule-scope" aria-label="Session scope" value={scope} onChange={(e) => { setScope(e.target.value as 'selected' | 'all'); setOffset(0); }}>
             <option value="selected">Working session{sel ? ` (${sel.exam_date} ${sel.session_label})` : ''}</option><option value="all">All sessions</option></Select>
-          <Select aria-label="Status filter" value={status} onChange={(e) => { setStatus(e.target.value); setOffset(0); }}>
+          <Select id="schedule-status-filter" name="schedule-status-filter" aria-label="Status filter" value={status} onChange={(e) => { setStatus(e.target.value); setOffset(0); }}>
             <option value="">All statuses</option><option value="allocated">Allocated</option><option value="pending">Pending</option>
             <option value="flagged">Flagged</option><option value="released">Released</option></Select>
         </div>
         <ErrorBox error={q.error} onRetry={q.reload} />
         <DataTable caption="Schedule" columns={cols} rows={q.data?.rows} rowKey={(r) => `${r.employee_id}|${r.exam_date}|${r.session_label}`} loading={q.loading}
           empty={<EmptyState title={term || status ? 'No matching rows' : 'The schedule is empty'}>{term || status ? 'Try a different search or filter.' : 'Import a CSV or XLSX file to load the duty schedule.'}</EmptyState>} />
-        {q.data && <Pagination total={q.data.total} offset={offset} limit={PAGE} onChange={setOffset} />}
+        {q.data && <Pagination total={q.data.total} offset={offset} limit={limit} onChange={setOffset} onLimitChange={setLimit} />}
       </Card>
 
       {deleteTarget && (
@@ -179,8 +178,8 @@ function ScheduleList({ reloadKey, onChanged }: { reloadKey: number; onChanged: 
 }
 
 function ImportHistory({ reloadKey }: { reloadKey: number }) {
-  const [offset, setOffset] = useState(0);
-  const q = useAdminQuery(() => api.listImports(PAGE, offset), [offset, reloadKey]);
+  const { limit, offset, setOffset, setLimit } = usePageLimit();
+  const q = useAdminQuery(() => api.listImports(limit, offset), [limit, offset, reloadKey]);
   const tone = (s: string) => (s === 'committed' ? 'green' : s === 'cancelled' ? 'neutral' : s === 'failed' ? 'red' : 'amber');
   const cols: Column<ImportBatchRow>[] = [
     { key: 'file', header: 'File', cell: (r) => <span className="font-semibold">{r.filename}</span> },
@@ -199,7 +198,7 @@ function ImportHistory({ reloadKey }: { reloadKey: number }) {
     <Card title="Import history">
       <ErrorBox error={q.error} onRetry={q.reload} />
       <DataTable caption="Import batches" columns={cols} rows={q.data?.rows} rowKey={(r) => r.id} loading={q.loading} empty={<EmptyState title="No imports yet" />} />
-      {q.data && <Pagination total={q.data.total} offset={offset} limit={PAGE} onChange={setOffset} />}
+      {q.data && <Pagination total={q.data.total} offset={offset} limit={limit} onChange={setOffset} onLimitChange={setLimit} />}
     </Card>
   );
 }

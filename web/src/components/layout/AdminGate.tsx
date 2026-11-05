@@ -68,9 +68,14 @@ function Shell() {
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[16rem_1fr]">
       <aside className="hidden bg-yellow-500 lg:block">{side}</aside>
-      <header className="sticky top-0 z-30 flex items-center justify-between bg-yellow-500 px-4 py-3 lg:hidden">
-        <span className="text-sm font-bold text-slate-900">{config.exam_cell_name}</span>
-        <button type="button" aria-label="Open menu" aria-expanded={open} onClick={() => setOpen(true)} className="rounded p-1 text-slate-900"><Menu className="h-6 w-6" aria-hidden /></button>
+      <header className="sticky top-0 z-30 flex items-center justify-between gap-2 bg-yellow-500 px-4 py-3 lg:hidden">
+        <span className="truncate text-sm font-bold text-slate-900">{config.exam_cell_name}</span>
+        <div className="flex items-center gap-1" data-testid="quick-access-bar">
+          <Link to="/admin" aria-label="Dashboard" className="rounded p-1.5 text-slate-900 hover:bg-black/10"><LayoutDashboard className="h-5 w-5" aria-hidden /></Link>
+          <Link to="/admin/help" aria-label="Help" className="rounded p-1.5 text-slate-900 hover:bg-black/10"><HelpCircle className="h-5 w-5" aria-hidden /></Link>
+          <Link to="/admin/settings" aria-label="Settings" className="rounded p-1.5 text-slate-900 hover:bg-black/10"><Cog className="h-5 w-5" aria-hidden /></Link>
+          <button type="button" aria-label="Open menu" aria-expanded={open} onClick={() => setOpen(true)} className="rounded p-1.5 text-slate-900 hover:bg-black/10"><Menu className="h-6 w-6" aria-hidden /></button>
+        </div>
       </header>
       {open && (
         <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">

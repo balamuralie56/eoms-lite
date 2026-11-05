@@ -41,6 +41,14 @@ export function useAction() {
   return { run, busy };
 }
 
+/** Page offset + a user-adjustable page size (resets to the first page whenever it changes). */
+export function usePageLimit(defaultLimit = 25) {
+  const [limit, setLimitRaw] = useState(defaultLimit);
+  const [offset, setOffset] = useState(0);
+  const setLimit = useCallback((n: number) => { setLimitRaw(n); setOffset(0); }, []);
+  return { limit, offset, setOffset, setLimit };
+}
+
 /** Admin date input (YYYY-MM-DD, interpreted in Asia/Kolkata) -> ISO instant for report/audit date filters. */
 export function istDayStart(ymd: string): string { return `${ymd}T00:00:00+05:30`; }
 export function istNextDayStart(ymd: string): string {
