@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { Link, NavLink, Navigate, Outlet, useLocation } from 'react-router-dom';
 import {
   BarChart3, CalendarClock, ClipboardList, DoorOpen, FileSpreadsheet, HelpCircle, LayoutDashboard, ListChecks, LogOut, Menu, Settings as Cog, ShieldCheck, X,
@@ -24,11 +24,15 @@ const NAV = [
 
 function SessionPicker() {
   const { sessions, selectedId, select } = useSessions();
+  // The sidebar's JSX is reused for the desktop <aside> and the mobile slide-out drawer, so this component
+  // mounts TWICE at once (one hidden via CSS, not unmounted) — useId() gives each mount its own id/name so
+  // the browser never sees two "session-picker" form fields in the same document.
+  const id = useId();
   if (sessions.length === 0) return <p className="text-xs text-slate-700">No sessions yet</p>;
   return (
     <div data-tour="session-picker">
-      <label htmlFor="session-picker" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-700">Working session</label>
-      <Select id="session-picker" value={selectedId ?? ''} onChange={(e) => select(e.target.value || null)} className="!py-1.5 text-sm">
+      <label htmlFor={id} className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-700">Working session</label>
+      <Select id={id} name={id} value={selectedId ?? ''} onChange={(e) => select(e.target.value || null)} className="!py-1.5 text-sm">
         {sessions.map((s) => <option key={s.id} value={s.id}>{formatExamDate(s.exam_date)} · {s.session_label}{s.is_active ? '' : ' (inactive)'}</option>)}
       </Select>
     </div>
