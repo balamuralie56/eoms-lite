@@ -152,9 +152,11 @@ test('catalog: every admin function is SECURITY DEFINER, pins search_path, and i
              has_function_privilege('public', p.oid, 'execute') public_exec
         from pg_proc p join pg_namespace n on n.oid = p.pronamespace
        where n.nspname = 'public' and p.proname like 'admin\\_%'`);
-    // 7 Phase 1 + 17 Phase 2A + 16 product phase (4 settings/maintenance/diagnostic + 12 read/report). The count is a
-    // deliberate closed list: adding an admin function must be a conscious change to this test.
-    assert.equal(fns.length, 40, 'admin function count');
+    // 7 Phase 1 + 17 Phase 2A + 16 product phase (4 settings/maintenance/diagnostic + 12 read/report) + 6 later
+    // additions (admin_delete_schedule_entry, admin_clear_session_schedule, admin_export_all_data,
+    // admin_reset_all_data, admin_import_rooms, admin_import_sessions). The count is a deliberate closed list:
+    // adding an admin function must be a conscious change to this test.
+    assert.equal(fns.length, 46, 'admin function count');
     for (const f of fns) {
       assert.equal(f.prosecdef, true, f.proname);
       assert.ok((f.proconfig || []).join(',').includes('search_path=""'), f.proname + ' search_path');

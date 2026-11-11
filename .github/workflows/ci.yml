@@ -1,4 +1,4 @@
-# CI for EOMS Lite. NOTE: this workflow has not been executed on GitHub yet; the same commands pass locally.
+# CI for EOMS Lite.
 name: ci
 on:
   push:
@@ -8,19 +8,28 @@ on:
 jobs:
   database:
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:17
-        env: { POSTGRES_PASSWORD: postgres }
-        ports: ['54329:5432']
-        options: >-
-          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 24, cache: npm }
+      # GitHub Actions' declarative `services:` block cannot pass command-line flags to the container, so
+      # Postgres is started by hand here instead — with the SAME image, port and command as docker-compose.yml,
+      # so CI and local `npm run stack:up` behave identically. Without max_connections=300, the default of 100
+      # is too tight for the concurrency tests' connection pools (one test alone opens 100 of its own).
+      - name: Start PostgreSQL (same command as docker-compose.yml)
+        run: |
+          docker run -d --name eoms-lite-test-db -p 54329:5432 \
+            -e POSTGRES_PASSWORD=postgres \
+            postgres:17 postgres -c max_connections=300 -c fsync=off
+          for i in $(seq 1 30); do
+            docker exec eoms-lite-test-db pg_isready -U postgres -h 127.0.0.1 && break
+            sleep 1
+          done
       - run: npm ci
       - run: npm test            # PostgreSQL tests: schema, allocation, concurrency, security, admin RPCs
+      - name: Stop PostgreSQL
+        if: always()
+        run: docker rm -f eoms-lite-test-db
 
   web:
     runs-on: ubuntu-latest
